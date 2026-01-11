@@ -26,12 +26,37 @@ export function GuacamoleDisplay({ token, className }: Props) {
     const client = new Guacamole.Client(tunnel);
     clientRef.current = client;
 
+    // Get container dimensions
+    const container = containerRef.current;
+
     // Clear container and add display
-    containerRef.current.innerHTML = '';
-    const displayElement = client.getDisplay().getElement();
-    displayElement.style.width = '100%';
-    displayElement.style.height = '100%';
-    containerRef.current.appendChild(displayElement);
+    container.innerHTML = '';
+    const display = client.getDisplay();
+    const displayElement = display.getElement();
+
+    // Style the display element
+    displayElement.style.position = 'absolute';
+    displayElement.style.left = '0';
+    displayElement.style.top = '0';
+    container.appendChild(displayElement);
+
+    // Handle display resize - scale to fit container
+    const updateScale = () => {
+      const containerWidth = container.offsetWidth;
+      const containerHeight = container.offsetHeight;
+      const displayWidth = display.getWidth();
+      const displayHeight = display.getHeight();
+
+      if (displayWidth && displayHeight && containerWidth && containerHeight) {
+        const scaleX = containerWidth / displayWidth;
+        const scaleY = containerHeight / displayHeight;
+        const scale = Math.min(scaleX, scaleY);
+        display.scale(scale);
+      }
+    };
+
+    // Update scale when display size changes
+    display.onresize = updateScale;
 
     // Handle errors
     client.onerror = (error) => {
@@ -41,6 +66,10 @@ export function GuacamoleDisplay({ token, className }: Props) {
     // Handle state changes
     client.onstatechange = (state) => {
       console.log('Guacamole state:', state);
+      // Update scale when connected
+      if (state === 3) { // CONNECTED
+        setTimeout(updateScale, 100);
+      }
     };
 
     // Set up mouse handling using the event-based API
@@ -60,10 +89,17 @@ export function GuacamoleDisplay({ token, className }: Props) {
       client.sendKeyEvent(0, keysym);
     };
 
+    // Handle container resize
+    const resizeObserver = new ResizeObserver(() => {
+      updateScale();
+    });
+    resizeObserver.observe(container);
+
     // Connect
     client.connect();
 
     return () => {
+      resizeObserver.disconnect();
       keyboard.onkeydown = null;
       keyboard.onkeyup = null;
       keyboard.reset();
@@ -86,7 +122,13 @@ export function GuacamoleDisplay({ token, className }: Props) {
     <div
       ref={containerRef}
       className={className}
-      style={{ width: '100%', height: '100%', overflow: 'hidden' }}
+      style={{
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        position: 'relative',
+        background: '#000'
+      }}
     />
   );
 }
