@@ -66,6 +66,28 @@ export function GuacamoleDisplay({ token, className }: Props) {
       console.log('Guacamole state:', state);
     };
 
+    // Clipboard: remote → local (when VNC clipboard changes, copy to browser)
+    client.onclipboard = (stream: Guacamole.InputStream, mimetype: string) => {
+      if (mimetype !== 'text/plain') return;
+
+      let clipboardData = '';
+      const reader = new Guacamole.StringReader(stream);
+
+      reader.ontext = (text: string) => {
+        clipboardData += text;
+      };
+
+      reader.onend = () => {
+        if (clipboardData) {
+          navigator.clipboard.writeText(clipboardData).then(() => {
+            console.log('Clipboard from VNC:', clipboardData.substring(0, 50) + (clipboardData.length > 50 ? '...' : ''));
+          }).catch(err => {
+            console.error('Failed to write to clipboard:', err);
+          });
+        }
+      };
+    };
+
     // Native mouse handling - bypass broken Guacamole.Mouse
     const mouseState = new Guacamole.Mouse.State(0, 0, false, false, false, false, false);
 
@@ -104,8 +126,28 @@ export function GuacamoleDisplay({ token, className }: Props) {
     const focusOnClick = () => container.focus();
     container.addEventListener('mousedown', focusOnClick);
 
+    // Clipboard: local → remote (paste into VNC)
+    const sendClipboardToRemote = (text: string) => {
+      const stream = client.createClipboardStream('text/plain');
+      const writer = new Guacamole.StringWriter(stream);
+      writer.sendText(text);
+      writer.sendEnd();
+      console.log('Clipboard to VNC:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
+    };
+
     // Keyboard - prevent browser from handling special keys
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      // Handle Ctrl+V paste
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            sendClipboardToRemote(text);
+          }
+        } catch (err) {
+          console.error('Failed to read clipboard:', err);
+        }
+      }
       // Prevent browser defaults for all keys when VNC is focused
       e.preventDefault();
       e.stopPropagation();
