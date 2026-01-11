@@ -13,12 +13,10 @@ export function GuacamoleDisplay({ token, className }: Props) {
   const connect = useCallback(() => {
     if (!containerRef.current) return;
 
-    // Clean up existing client
     if (clientRef.current) {
       clientRef.current.disconnect();
     }
 
-    // Create WebSocket tunnel to guacamole-lite
     const tunnel = new Guacamole.WebSocketTunnel(
       `wss://guac.braelin.uk/?token=${encodeURIComponent(token)}`
     );
@@ -26,70 +24,38 @@ export function GuacamoleDisplay({ token, className }: Props) {
     const client = new Guacamole.Client(tunnel);
     clientRef.current = client;
 
-    // Get container dimensions
     const container = containerRef.current;
     const containerWidth = container.offsetWidth;
     const containerHeight = container.offsetHeight;
 
-    // Clear container and add display
     container.innerHTML = '';
     const display = client.getDisplay();
     const displayElement = display.getElement();
 
-    // Style the display element
+    // Position at 0,0 - no transforms
     displayElement.style.position = 'absolute';
     displayElement.style.left = '0';
     displayElement.style.top = '0';
     container.appendChild(displayElement);
 
-    // Handle display resize - scale to fit container and center
-    const updateScale = () => {
-      const currentContainerWidth = container.offsetWidth;
-      const currentContainerHeight = container.offsetHeight;
-      const displayWidth = display.getWidth();
-      const displayHeight = display.getHeight();
+    // NO SCALING - display at 1:1, container scrolls if needed
 
-      if (displayWidth && displayHeight && currentContainerWidth && currentContainerHeight) {
-        const scaleX = currentContainerWidth / displayWidth;
-        const scaleY = currentContainerHeight / displayHeight;
-        const scale = Math.min(scaleX, scaleY);
-        display.scale(scale);
-
-        // Center the display
-        const scaledWidth = displayWidth * scale;
-        const scaledHeight = displayHeight * scale;
-        const offsetX = (currentContainerWidth - scaledWidth) / 2;
-        const offsetY = (currentContainerHeight - scaledHeight) / 2;
-        displayElement.style.left = `${offsetX}px`;
-        displayElement.style.top = `${offsetY}px`;
-      }
-    };
-
-    // Update scale when display size changes
-    display.onresize = updateScale;
-
-    // Handle errors
     client.onerror = (error) => {
       console.error('Guacamole error:', error);
     };
 
-    // Handle state changes
     client.onstatechange = (state) => {
       console.log('Guacamole state:', state);
-      // Update scale when connected
-      if (state === 3) { // CONNECTED
-        setTimeout(updateScale, 100);
-      }
     };
 
-    // Set up mouse handling using the event-based API
+    // Mouse - raw coords, no transformation
     const mouse = new Guacamole.Mouse(displayElement);
     mouse.onEach(['mousedown', 'mouseup', 'mousemove'], (e) => {
-      const mouseEvent = e as Guacamole.Mouse.Event;
-      client.sendMouseState(mouseEvent.state);
+      const state = (e as Guacamole.Mouse.Event).state;
+      client.sendMouseState(state);
     });
 
-    // Set up keyboard handling
+    // Keyboard
     const keyboard = new Guacamole.Keyboard(document);
     keyboard.onkeydown = (keysym: number) => {
       client.sendKeyEvent(1, keysym);
@@ -99,17 +65,10 @@ export function GuacamoleDisplay({ token, className }: Props) {
       client.sendKeyEvent(0, keysym);
     };
 
-    // Handle container resize
-    const resizeObserver = new ResizeObserver(() => {
-      updateScale();
-    });
-    resizeObserver.observe(container);
-
-    // Connect with container dimensions so server matches our size
+    // Request VNC at container size (server may ignore)
     client.connect(`width=${containerWidth}&height=${containerHeight}`);
 
     return () => {
-      resizeObserver.disconnect();
       keyboard.onkeydown = null;
       keyboard.onkeyup = null;
       keyboard.reset();
@@ -135,7 +94,7 @@ export function GuacamoleDisplay({ token, className }: Props) {
       style={{
         width: '100%',
         height: '100%',
-        overflow: 'hidden',
+        overflow: 'auto',
         position: 'relative',
         background: '#000'
       }}
