@@ -66,21 +66,35 @@ export function GuacamoleDisplay({ token, className }: Props) {
       console.log('Guacamole state:', state);
     };
 
-    // Mouse - attach to container and manually compute coords
-    const mouse = new Guacamole.Mouse(container);
-    mouse.onEach(['mousedown', 'mouseup', 'mousemove'], (e) => {
-      const state = (e as Guacamole.Mouse.Event).state;
+    // Native mouse handling - bypass broken Guacamole.Mouse
+    const mouseState = new Guacamole.Mouse.State(0, 0, false, false, false, false, false);
+
+    const handleMouse = (e: MouseEvent) => {
+      const rect = container.getBoundingClientRect();
       const scale = scaleRef.current;
 
-      // Container coords -> display coords (divide by scale)
-      state.x = Math.floor(state.x / scale);
-      state.y = Math.floor(state.y / scale);
+      // Get position relative to container, then convert to display coords
+      const x = Math.floor((e.clientX - rect.left) / scale);
+      const y = Math.floor((e.clientY - rect.top) / scale);
+
+      mouseState.x = x;
+      mouseState.y = y;
+      mouseState.left = (e.buttons & 1) !== 0;
+      mouseState.middle = (e.buttons & 4) !== 0;
+      mouseState.right = (e.buttons & 2) !== 0;
 
       if (e.type === 'mousedown') {
-        console.log(`CLICK at (${state.x}, ${state.y}) scale=${scale.toFixed(3)} - buttons: left=${state.left}`);
+        console.log(`CLICK at (${x}, ${y}) scale=${scale.toFixed(3)} raw=(${e.clientX - rect.left}, ${e.clientY - rect.top})`);
       }
-      client.sendMouseState(state);
-    });
+
+      client.sendMouseState(mouseState);
+      e.preventDefault();
+    };
+
+    container.addEventListener('mousedown', handleMouse);
+    container.addEventListener('mouseup', handleMouse);
+    container.addEventListener('mousemove', handleMouse);
+    container.addEventListener('contextmenu', (e) => e.preventDefault());
 
     // Keyboard
     const keyboard = new Guacamole.Keyboard(document);
@@ -96,6 +110,9 @@ export function GuacamoleDisplay({ token, className }: Props) {
     client.connect(`width=${containerWidth}&height=${containerHeight}`);
 
     return () => {
+      container.removeEventListener('mousedown', handleMouse);
+      container.removeEventListener('mouseup', handleMouse);
+      container.removeEventListener('mousemove', handleMouse);
       keyboard.onkeydown = null;
       keyboard.onkeyup = null;
       keyboard.reset();
