@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import './App.css'
 
 interface Desktop {
@@ -42,14 +42,19 @@ const desktops: Desktop[] = [
 
 function App() {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [loadedDesktops, setLoadedDesktops] = useState<Set<number>>(new Set([0]))
+  const [preloadAll, setPreloadAll] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const currentDesktop = desktops[currentIndex]
 
+  // Pre-load all desktops after 2 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setPreloadAll(true), 2000)
+    return () => clearTimeout(timer)
+  }, [])
+
   const goTo = useCallback((index: number) => {
     setCurrentIndex(index)
-    setLoadedDesktops(prev => new Set([...prev, index]))
   }, [])
 
   const next = useCallback(() => {
@@ -109,7 +114,7 @@ function App() {
         >
           {desktops.map((desktop, index) => (
             <div key={desktop.id} className="slide">
-              {loadedDesktops.has(index) ? (
+              {(index === currentIndex || preloadAll) ? (
                 <iframe
                   src={desktop.url}
                   title={desktop.name}
@@ -118,10 +123,7 @@ function App() {
               ) : (
                 <div className="loading-placeholder">
                   <div className="spinner"></div>
-                  <p>Click to load {desktop.name}</p>
-                  <button className="load-btn" onClick={() => goTo(index)}>
-                    Load Desktop
-                  </button>
+                  <p>Loading {desktop.name}...</p>
                 </div>
               )}
             </div>
