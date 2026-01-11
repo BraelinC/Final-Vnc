@@ -38,9 +38,21 @@ export function GuacamoleDisplay({ token, className }: Props) {
     displayElement.style.top = '0';
     container.appendChild(displayElement);
 
-    // Must call display.scale() for content to render
+    // Scale to fit container
     display.onresize = () => {
-      display.scale(1);  // 1:1 scale, but needed for rendering
+      const displayWidth = display.getWidth();
+      const displayHeight = display.getHeight();
+      const containerWidth = container.offsetWidth;
+      const containerHeight = container.offsetHeight;
+
+      if (displayWidth && displayHeight) {
+        const scale = Math.min(
+          containerWidth / displayWidth,
+          containerHeight / displayHeight,
+          1
+        );
+        display.scale(scale);
+      }
     };
 
     client.onerror = (error) => {
