@@ -123,8 +123,11 @@ function App() {
             />
           ))}
         </div>
-        <div className="header-info">
-          {currentDesktop.name} ({currentDesktop.user})
+        <div className="ssh-section">
+          <span className="ssh-label">SSH:</span>
+          <code className="ssh-cmd" onClick={copySSH}>
+            {copied ? 'Copied!' : currentDesktop.sshCmd}
+          </code>
         </div>
       </header>
 
@@ -198,18 +201,6 @@ function App() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="footer">
-        <div className="ssh-section">
-          <span className="ssh-label">SSH:</span>
-          <code className="ssh-cmd" onClick={copySSH}>
-            {copied ? 'Copied!' : currentDesktop.sshCmd}
-          </code>
-        </div>
-        <div className="nav-hint">
-          Use ← → arrows or swipe to navigate
-        </div>
-      </footer>
     </div>
   )
 }
