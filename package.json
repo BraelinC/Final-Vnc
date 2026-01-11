@@ -11,11 +11,15 @@
   },
   "dependencies": {
     "convex": "^1.31.3",
+    "crypto-js": "^4.2.0",
+    "guacamole-common-js": "^1.5.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/crypto-js": "^4.2.2",
+    "@types/guacamole-common-js": "^1.5.5",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",

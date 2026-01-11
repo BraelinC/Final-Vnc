@@ -1,0 +1,26 @@
+.split-desktop {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.split-top {
+  flex-shrink: 0;
+  overflow: hidden;
+  border-bottom: 2px solid #e94560;
+}
+
+.split-bottom {
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #1a1a2e;
+}
+
+.split-top iframe,
+.split-bottom iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}

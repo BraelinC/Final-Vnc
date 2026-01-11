@@ -1,11 +1,18 @@
 import { useState, useCallback, useEffect } from 'react'
 import './App.css'
+import { SplitDesktop } from './components/SplitDesktop'
+import { GuacamoleDisplay } from './components/GuacamoleDisplay'
+import { guacTokens } from './lib/guacTokens'
 
 interface Desktop {
   id: number
   name: string
   user: string
-  url: string
+  type: 'novnc' | 'guacamole' | 'novnc-split'
+  url?: string
+  termUrl?: string
+  vncToken?: string
+  sshToken?: string
   sshCmd: string
 }
 
@@ -14,6 +21,7 @@ const desktops: Desktop[] = [
     id: 1,
     name: 'Desktop 1',
     user: 'claude',
+    type: 'novnc',
     url: 'https://vps2.braelin.uk/vnc.html?password=11142006&autoconnect=true&resize=scale',
     sshCmd: 'ssh root@38.242.207.4 -t "su - claude -c tmux"'
   },
@@ -21,13 +29,16 @@ const desktops: Desktop[] = [
     id: 2,
     name: 'Desktop 2',
     user: 'claude2',
+    type: 'novnc-split',
     url: 'https://vps2-2.braelin.uk/vnc.html?password=11142006&autoconnect=true&resize=scale',
+    termUrl: 'https://term.braelin.uk/',
     sshCmd: 'ssh root@38.242.207.4 -t "su - claude2 -c tmux"'
   },
   {
     id: 3,
     name: 'Desktop 3',
     user: 'claude3',
+    type: 'novnc',
     url: 'https://vps2-3.braelin.uk/vnc.html?password=11142006&autoconnect=true&resize=scale',
     sshCmd: 'ssh root@38.242.207.4 -t "su - claude3 -c tmux"'
   },
@@ -35,8 +46,27 @@ const desktops: Desktop[] = [
     id: 4,
     name: 'Desktop 4',
     user: 'claude4',
+    type: 'novnc',
     url: 'https://vps2-4.braelin.uk/vnc.html?password=11142006&autoconnect=true&resize=scale',
     sshCmd: 'ssh root@38.242.207.4 -t "su - claude4 -c tmux"'
+  },
+  {
+    id: 5,
+    name: 'Desktop 5',
+    user: 'claude5',
+    type: 'guacamole',
+    vncToken: guacTokens.claude5Vnc,
+    sshToken: guacTokens.claude5Ssh,
+    sshCmd: 'ssh root@38.242.207.4 -t "su - claude5 -c tmux"'
+  },
+  {
+    id: 6,
+    name: 'Desktop 6',
+    user: 'claude6',
+    type: 'guacamole',
+    vncToken: guacTokens.claude6Vnc,
+    sshToken: guacTokens.claude6Ssh,
+    sshCmd: 'ssh root@38.242.207.4 -t "su - claude6 -c tmux"'
   }
 ]
 
@@ -115,11 +145,46 @@ function App() {
           {desktops.map((desktop, index) => (
             <div key={desktop.id} className="slide">
               {(index === currentIndex || preloadAll) ? (
-                <iframe
-                  src={desktop.url}
-                  title={desktop.name}
-                  className="vnc-frame"
-                />
+                // Render based on desktop type
+                desktop.type === 'novnc' ? (
+                  <iframe
+                    src={desktop.url}
+                    title={desktop.name}
+                    className="vnc-frame"
+                  />
+                ) : desktop.type === 'novnc-split' ? (
+                  <SplitDesktop
+                    top={
+                      <iframe
+                        src={desktop.url}
+                        title={`${desktop.name} VNC`}
+                        className="vnc-frame"
+                      />
+                    }
+                    bottom={
+                      <iframe
+                        src={desktop.termUrl}
+                        title={`${desktop.name} Terminal`}
+                        className="vnc-frame"
+                      />
+                    }
+                  />
+                ) : desktop.type === 'guacamole' ? (
+                  <SplitDesktop
+                    top={
+                      <GuacamoleDisplay
+                        token={desktop.vncToken!}
+                        className="guac-display"
+                      />
+                    }
+                    bottom={
+                      <GuacamoleDisplay
+                        token={desktop.sshToken!}
+                        className="guac-display"
+                      />
+                    }
+                  />
+                ) : null
               ) : (
                 <div className="loading-placeholder">
                   <div className="spinner"></div>

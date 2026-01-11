@@ -120,6 +120,12 @@
   background: #000;
 }
 
+.guac-display {
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
 /* Loading Placeholder */
 .loading-placeholder {
   display: flex;
