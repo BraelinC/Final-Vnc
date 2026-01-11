@@ -8,7 +8,7 @@ interface GuacConnection {
     type: 'vnc' | 'ssh';
     settings: {
       hostname: string;
-      port: number;
+      port: number | string;
       password?: string;
       username?: string;
     };
@@ -23,11 +23,13 @@ export function generateGuacToken(connection: GuacConnection): string {
     { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
   );
 
-  // Format: base64(iv)$base64(encrypted)
-  const ivBase64 = CryptoJS.enc.Base64.stringify(iv);
-  const encryptedBase64 = encrypted.toString();
+  // guacamole-lite expects: base64({ iv: "base64", value: "base64" })
+  const tokenObj = {
+    iv: CryptoJS.enc.Base64.stringify(iv),
+    value: encrypted.ciphertext.toString(CryptoJS.enc.Base64)
+  };
 
-  return ivBase64 + '$' + encryptedBase64;
+  return btoa(JSON.stringify(tokenObj));
 }
 
 // Pre-generated tokens for our desktops
