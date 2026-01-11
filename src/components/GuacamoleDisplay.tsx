@@ -126,47 +126,43 @@ export function GuacamoleDisplay({ token, className }: Props) {
     const focusOnClick = () => container.focus();
     container.addEventListener('mousedown', focusOnClick);
 
-    // Clipboard: local → remote (paste into VNC)
+    // Clipboard: local → remote (send text in chunks for large data)
     const sendClipboardToRemote = (text: string) => {
       const stream = client.createClipboardStream('text/plain');
       const writer = new Guacamole.StringWriter(stream);
-      writer.sendText(text);
+      // Send in 4096 byte chunks (as per Guacamole docs)
+      for (let i = 0; i < text.length; i += 4096) {
+        writer.sendText(text.substring(i, i + 4096));
+      }
       writer.sendEnd();
       console.log('Clipboard to VNC:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
     };
 
-    // Keyboard - prevent browser from handling special keys
-    let skipNextCtrlV = false;
-    const handleKeyDown = async (e: KeyboardEvent) => {
-      // Handle Ctrl+V paste - intercept and handle manually
-      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-        skipNextCtrlV = true;
-        try {
-          const text = await navigator.clipboard.readText();
-          if (text) {
-            // Send clipboard data first
-            sendClipboardToRemote(text);
-            // Wait for clipboard to be set, then send Ctrl+V
-            setTimeout(() => {
-              // Ctrl down, V down, V up, Ctrl up
-              client.sendKeyEvent(1, 65507); // Ctrl down
-              client.sendKeyEvent(1, 118);   // v down
-              client.sendKeyEvent(0, 118);   // v up
-              client.sendKeyEvent(0, 65507); // Ctrl up
-            }, 50);
-          }
-        } catch (err) {
-          console.error('Failed to read clipboard:', err);
-        }
-        e.preventDefault();
-        e.stopPropagation();
-        return; // Don't let Guacamole.Keyboard handle this
+    // Handle browser paste event - this fires when user does Ctrl+V
+    const handlePaste = (e: ClipboardEvent) => {
+      const text = e.clipboardData?.getData('text/plain');
+      if (text) {
+        sendClipboardToRemote(text);
+        console.log('Paste event captured, sent to VNC');
       }
-      // Prevent browser defaults for all keys when VNC is focused
+    };
+    container.addEventListener('paste', handlePaste);
+
+    // Keyboard - allow Ctrl+C/V/X through to browser for clipboard
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow clipboard shortcuts through to browser
+      if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
+        // Don't preventDefault - let browser handle clipboard
+        return;
+      }
+      // Prevent browser defaults for other keys
       e.preventDefault();
       e.stopPropagation();
     };
     const handleKeyUp = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
     };
@@ -176,24 +172,13 @@ export function GuacamoleDisplay({ token, className }: Props) {
     // Guacamole keyboard for keysym translation
     const keyboard = new Guacamole.Keyboard(container);
     keyboard.onkeydown = (keysym: number) => {
-      // Skip if we're handling Ctrl+V manually
-      if (skipNextCtrlV && (keysym === 65507 || keysym === 65508 || keysym === 118)) {
-        console.log(`KEY DOWN (skipped for paste): ${keysym}`);
-        return false;
-      }
       console.log(`KEY DOWN: ${keysym}`);
       client.sendKeyEvent(1, keysym);
-      return false;
+      // Return true for Ctrl+C/V/X to let browser handle clipboard
+      // 99=c, 118=v, 120=x, 65507/65508=Ctrl
+      return true; // Always allow through to browser
     };
     keyboard.onkeyup = (keysym: number) => {
-      // Reset skip flag on Ctrl release
-      if (keysym === 65507 || keysym === 65508) {
-        skipNextCtrlV = false;
-      }
-      if (skipNextCtrlV && (keysym === 65507 || keysym === 65508 || keysym === 118)) {
-        console.log(`KEY UP (skipped for paste): ${keysym}`);
-        return;
-      }
       console.log(`KEY UP: ${keysym}`);
       client.sendKeyEvent(0, keysym);
     };
@@ -206,6 +191,7 @@ export function GuacamoleDisplay({ token, className }: Props) {
       container.removeEventListener('mouseup', handleMouse);
       container.removeEventListener('mousemove', handleMouse);
       container.removeEventListener('mousedown', focusOnClick);
+      container.removeEventListener('paste', handlePaste);
       container.removeEventListener('keydown', handleKeyDown);
       container.removeEventListener('keyup', handleKeyUp);
       keyboard.onkeydown = null;
