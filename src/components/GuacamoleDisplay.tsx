@@ -38,15 +38,9 @@ export function GuacamoleDisplay({ token, className }: Props) {
     displayElement.style.top = '0';
     container.appendChild(displayElement);
 
-    // Log when display resizes (needed for rendering)
+    // Must call display.scale() for content to render
     display.onresize = () => {
-      const w = display.getWidth();
-      const h = display.getHeight();
-      console.log(`Display size: ${w}x${h}`);
-      console.log(`displayElement size: ${displayElement.offsetWidth}x${displayElement.offsetHeight}`);
-      console.log(`displayElement style: left=${displayElement.style.left}, top=${displayElement.style.top}`);
-      console.log(`container size: ${container.offsetWidth}x${container.offsetHeight}`);
-      console.log(`displayElement children:`, displayElement.children.length);
+      display.scale(1);  // 1:1 scale, but needed for rendering
     };
 
     client.onerror = (error) => {
