@@ -171,18 +171,6 @@ export function GuacamoleDisplay({ token, className }: Props) {
     const focusOnClick = () => container.focus();
     container.addEventListener('mousedown', focusOnClick);
 
-    // Clipboard: local → remote (send text in chunks for large data)
-    const sendClipboardToRemote = (text: string) => {
-      const stream = client.createClipboardStream('text/plain');
-      const writer = new Guacamole.StringWriter(stream);
-      // Send in 4096 byte chunks (as per Guacamole docs)
-      for (let i = 0; i < text.length; i += 4096) {
-        writer.sendText(text.substring(i, i + 4096));
-      }
-      writer.sendEnd();
-      console.log('Clipboard to VNC:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
-    };
-
     // Ctrl+V paste: type clipboard text directly
     const handlePaste = (e: ClipboardEvent) => {
       const text = e.clipboardData?.getData('text/plain');
