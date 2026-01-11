@@ -50,6 +50,7 @@ export function GuacamoleDisplay({ token, className }: Props) {
         );
         display.scale(scale);
         scaleRef.current = scale;
+        console.log(`SCALE: display(${displayWidth}x${displayHeight}) container(${containerWidth}x${containerHeight}) scale=${scale.toFixed(2)}`);
       }
     };
 
@@ -71,9 +72,15 @@ export function GuacamoleDisplay({ token, className }: Props) {
 
     mouse.onEach(['mousedown', 'mouseup', 'mousemove'], (e) => {
       const state = (e as Guacamole.Mouse.Event).state;
+      const rawX = state.x;
+      const rawY = state.y;
       // Divide by scale to get VNC coordinates
       state.x = state.x / scaleRef.current;
       state.y = state.y / scaleRef.current;
+      // Debug: log clicks only
+      if (e.type === 'mousedown') {
+        console.log(`CLICK: raw(${rawX},${rawY}) scale=${scaleRef.current.toFixed(2)} → vnc(${state.x.toFixed(0)},${state.y.toFixed(0)})`);
+      }
       client.sendMouseState(state);
     });
 
