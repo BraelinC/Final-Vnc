@@ -62,8 +62,11 @@ export function GuacamoleDisplay({ token, className }: Props) {
       console.error('Guacamole error:', error);
     };
 
+    // Track connection state - only send events when connected (state 3)
+    let isConnected = false;
     client.onstatechange = (state) => {
       console.log('Guacamole state:', state);
+      isConnected = (state === 3); // 3 = connected
     };
 
     // Clipboard: remote → local (when VNC clipboard changes, copy to browser)
@@ -90,6 +93,10 @@ export function GuacamoleDisplay({ token, className }: Props) {
 
     // Type text directly by sending key events for each character
     const typeText = (text: string) => {
+      if (!isConnected) {
+        console.log('Not connected, cannot type');
+        return;
+      }
       for (const char of text) {
         const code = char.charCodeAt(0);
         // For basic ASCII, keysym = char code
@@ -144,7 +151,10 @@ export function GuacamoleDisplay({ token, className }: Props) {
         console.log(`CLICK at (${x}, ${y}) scale=${scale.toFixed(3)} button=${e.button}`);
       }
 
-      client.sendMouseState(mouseState);
+      // Only send mouse state if connected
+      if (isConnected) {
+        client.sendMouseState(mouseState);
+      }
       e.preventDefault();
     };
 
@@ -218,16 +228,22 @@ export function GuacamoleDisplay({ token, className }: Props) {
         console.log('Blocking Ctrl+V - paste event will handle');
         return true;
       }
-      console.log(`KEY DOWN: ${keysym}`);
-      client.sendKeyEvent(1, keysym);
+      // Only send if connected
+      if (isConnected) {
+        console.log(`KEY DOWN: ${keysym}`);
+        client.sendKeyEvent(1, keysym);
+      }
       return true;
     };
     keyboard.onkeyup = (keysym: number) => {
       if (keysym === 65507 || keysym === 65508) ctrlHeld = false;
       // Block Ctrl+V release
       if (ctrlHeld && keysym === 118) return;
-      console.log(`KEY UP: ${keysym}`);
-      client.sendKeyEvent(0, keysym);
+      // Only send if connected
+      if (isConnected) {
+        console.log(`KEY UP: ${keysym}`);
+        client.sendKeyEvent(0, keysym);
+      }
     };
 
     // Request VNC at container size (server may ignore)
