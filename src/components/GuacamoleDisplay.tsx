@@ -136,17 +136,31 @@ export function GuacamoleDisplay({ token, className }: Props) {
     };
 
     // Keyboard - prevent browser from handling special keys
+    let skipNextCtrlV = false;
     const handleKeyDown = async (e: KeyboardEvent) => {
-      // Handle Ctrl+V paste
+      // Handle Ctrl+V paste - intercept and handle manually
       if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        skipNextCtrlV = true;
         try {
           const text = await navigator.clipboard.readText();
           if (text) {
+            // Send clipboard data first
             sendClipboardToRemote(text);
+            // Wait for clipboard to be set, then send Ctrl+V
+            setTimeout(() => {
+              // Ctrl down, V down, V up, Ctrl up
+              client.sendKeyEvent(1, 65507); // Ctrl down
+              client.sendKeyEvent(1, 118);   // v down
+              client.sendKeyEvent(0, 118);   // v up
+              client.sendKeyEvent(0, 65507); // Ctrl up
+            }, 50);
           }
         } catch (err) {
           console.error('Failed to read clipboard:', err);
         }
+        e.preventDefault();
+        e.stopPropagation();
+        return; // Don't let Guacamole.Keyboard handle this
       }
       // Prevent browser defaults for all keys when VNC is focused
       e.preventDefault();
@@ -162,11 +176,24 @@ export function GuacamoleDisplay({ token, className }: Props) {
     // Guacamole keyboard for keysym translation
     const keyboard = new Guacamole.Keyboard(container);
     keyboard.onkeydown = (keysym: number) => {
+      // Skip if we're handling Ctrl+V manually
+      if (skipNextCtrlV && (keysym === 65507 || keysym === 65508 || keysym === 118)) {
+        console.log(`KEY DOWN (skipped for paste): ${keysym}`);
+        return false;
+      }
       console.log(`KEY DOWN: ${keysym}`);
       client.sendKeyEvent(1, keysym);
-      return false; // Let Guacamole know we handled it
+      return false;
     };
     keyboard.onkeyup = (keysym: number) => {
+      // Reset skip flag on Ctrl release
+      if (keysym === 65507 || keysym === 65508) {
+        skipNextCtrlV = false;
+      }
+      if (skipNextCtrlV && (keysym === 65507 || keysym === 65508 || keysym === 118)) {
+        console.log(`KEY UP (skipped for paste): ${keysym}`);
+        return;
+      }
       console.log(`KEY UP: ${keysym}`);
       client.sendKeyEvent(0, keysym);
     };
