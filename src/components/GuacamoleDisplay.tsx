@@ -9,6 +9,7 @@ interface Props {
 export function GuacamoleDisplay({ token, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Guacamole.Client | null>(null);
+  const scaleRef = useRef<number>(1);
 
   const connect = useCallback(() => {
     if (!containerRef.current) return;
@@ -51,7 +52,9 @@ export function GuacamoleDisplay({ token, className }: Props) {
           containerHeight / displayHeight,
           1
         );
+        scaleRef.current = scale;
         display.scale(scale);
+        console.log(`Display scaled to ${scale.toFixed(3)} (${displayWidth}x${displayHeight} -> container ${containerWidth}x${containerHeight})`);
       }
     };
 
@@ -63,12 +66,18 @@ export function GuacamoleDisplay({ token, className }: Props) {
       console.log('Guacamole state:', state);
     };
 
-    // Mouse - raw coords, no transformation
-    const mouse = new Guacamole.Mouse(displayElement);
+    // Mouse - attach to container and manually compute coords
+    const mouse = new Guacamole.Mouse(container);
     mouse.onEach(['mousedown', 'mouseup', 'mousemove'], (e) => {
       const state = (e as Guacamole.Mouse.Event).state;
+      const scale = scaleRef.current;
+
+      // Container coords -> display coords (divide by scale)
+      state.x = Math.floor(state.x / scale);
+      state.y = Math.floor(state.y / scale);
+
       if (e.type === 'mousedown') {
-        console.log(`CLICK at (${state.x}, ${state.y}) - buttons: left=${state.left}, right=${state.right}, middle=${state.middle}`);
+        console.log(`CLICK at (${state.x}, ${state.y}) scale=${scale.toFixed(3)} - buttons: left=${state.left}`);
       }
       client.sendMouseState(state);
     });
