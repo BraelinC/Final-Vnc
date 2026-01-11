@@ -88,18 +88,25 @@ export function GuacamoleDisplay({ token, className }: Props) {
       }
     };
 
-    // Set up mouse handling using the event-based API
-    const mouse = new Guacamole.Mouse(displayElement);
+    // Set up mouse handling on CONTAINER (not displayElement)
+    // This way we get coordinates relative to the container
+    const mouse = new Guacamole.Mouse(container);
     mouse.onEach(['mousedown', 'mouseup', 'mousemove'], (e) => {
       const mouseEvent = e as Guacamole.Mouse.Event;
       const state = mouseEvent.state;
 
-      // Convert screen coordinates to VNC coordinates
-      // Account for display scaling and centering offset
-      state.x = state.x / scaleRef.current;
-      state.y = state.y / scaleRef.current;
+      // Convert container coordinates to VNC coordinates:
+      // 1. Subtract offset (display is centered in container)
+      // 2. Divide by scale (display is scaled to fit)
+      const vncX = (state.x - offsetRef.current.x) / scaleRef.current;
+      const vncY = (state.y - offsetRef.current.y) / scaleRef.current;
 
-      client.sendMouseState(state);
+      // Only send if within display bounds
+      if (vncX >= 0 && vncY >= 0) {
+        state.x = vncX;
+        state.y = vncY;
+        client.sendMouseState(state);
+      }
     });
 
     // Set up keyboard handling
