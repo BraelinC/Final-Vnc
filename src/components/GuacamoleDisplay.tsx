@@ -8,12 +8,12 @@ interface Props {
 
 export function GuacamoleDisplay({ token, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const displayRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Guacamole.Client | null>(null);
   const scaleRef = useRef<number>(1);
-  const offsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const connect = useCallback(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !displayRef.current) return;
 
     // Clean up existing client
     if (clientRef.current) {
@@ -30,49 +30,34 @@ export function GuacamoleDisplay({ token, className }: Props) {
 
     // Get container dimensions
     const container = containerRef.current;
-    const containerWidth = container.offsetWidth;
-    const containerHeight = container.offsetHeight;
+    const displayWrapper = displayRef.current;
 
-    // Clear container and add display
-    container.innerHTML = '';
-    const display = client.getDisplay();
-    const displayElement = display.getElement();
+    // Clear and add display element to wrapper
+    displayWrapper.innerHTML = '';
+    displayWrapper.appendChild(client.getDisplay().getElement());
 
-    // Style the display element
-    displayElement.style.position = 'absolute';
-    displayElement.style.left = '0';
-    displayElement.style.top = '0';
-    container.appendChild(displayElement);
-
-    // Handle display resize - scale to fit container and center
-    const updateScale = () => {
-      const currentContainerWidth = container.offsetWidth;
-      const currentContainerHeight = container.offsetHeight;
+    // Rescale display to fit container (guacozy style)
+    const rescaleDisplay = () => {
+      const display = client.getDisplay();
       const displayWidth = display.getWidth();
       const displayHeight = display.getHeight();
+      const containerWidth = container.offsetWidth;
+      const containerHeight = container.offsetHeight;
 
-      if (displayWidth && displayHeight && currentContainerWidth && currentContainerHeight) {
-        const scaleX = currentContainerWidth / displayWidth;
-        const scaleY = currentContainerHeight / displayHeight;
-        const scale = Math.min(scaleX, scaleY);
-        display.scale(scale);
-
-        // Center the display
-        const scaledWidth = displayWidth * scale;
-        const scaledHeight = displayHeight * scale;
-        const offsetX = (currentContainerWidth - scaledWidth) / 2;
-        const offsetY = (currentContainerHeight - scaledHeight) / 2;
-        displayElement.style.left = `${offsetX}px`;
-        displayElement.style.top = `${offsetY}px`;
-
-        // Store scale and offset for mouse coordinate conversion
-        scaleRef.current = scale;
-        offsetRef.current = { x: offsetX, y: offsetY };
+      if (displayWidth && displayHeight && containerWidth && containerHeight) {
+        // Scale to fit, max 1 (never enlarge)
+        const newScale = Math.min(
+          containerWidth / displayWidth,
+          containerHeight / displayHeight,
+          1
+        );
+        display.scale(newScale);
+        scaleRef.current = newScale;
       }
     };
 
     // Update scale when display size changes
-    display.onresize = updateScale;
+    client.getDisplay().onresize = rescaleDisplay;
 
     // Handle errors
     client.onerror = (error) => {
@@ -82,34 +67,27 @@ export function GuacamoleDisplay({ token, className }: Props) {
     // Handle state changes
     client.onstatechange = (state) => {
       console.log('Guacamole state:', state);
-      // Update scale when connected
       if (state === 3) { // CONNECTED
-        setTimeout(updateScale, 100);
+        setTimeout(rescaleDisplay, 100);
       }
     };
 
-    // Set up mouse handling on CONTAINER (not displayElement)
-    // This way we get coordinates relative to the container
-    const mouse = new Guacamole.Mouse(container);
-    mouse.onEach(['mousedown', 'mouseup', 'mousemove'], (e) => {
-      const mouseEvent = e as Guacamole.Mouse.Event;
-      const state = mouseEvent.state;
+    // Mouse on displayWrapper (guacozy style)
+    const mouse = new Guacamole.Mouse(displayWrapper);
 
-      // Convert container coordinates to VNC coordinates:
-      // 1. Subtract offset (display is centered in container)
-      // 2. Divide by scale (display is scaled to fit)
-      const vncX = (state.x - offsetRef.current.x) / scaleRef.current;
-      const vncY = (state.y - offsetRef.current.y) / scaleRef.current;
+    mouse.onmousemove = (mouseState: Guacamole.Mouse.State) => {
+      mouseState.x = mouseState.x / scaleRef.current;
+      mouseState.y = mouseState.y / scaleRef.current;
+      client.sendMouseState(mouseState);
+    };
 
-      // Only send if within display bounds
-      if (vncX >= 0 && vncY >= 0) {
-        state.x = vncX;
-        state.y = vncY;
-        client.sendMouseState(state);
-      }
-    });
+    mouse.onmousedown = mouse.onmouseup = (mouseState: Guacamole.Mouse.State) => {
+      mouseState.x = mouseState.x / scaleRef.current;
+      mouseState.y = mouseState.y / scaleRef.current;
+      client.sendMouseState(mouseState);
+    };
 
-    // Set up keyboard handling
+    // Keyboard handling
     const keyboard = new Guacamole.Keyboard(document);
     keyboard.onkeydown = (keysym: number) => {
       client.sendKeyEvent(1, keysym);
@@ -121,12 +99,12 @@ export function GuacamoleDisplay({ token, className }: Props) {
 
     // Handle container resize
     const resizeObserver = new ResizeObserver(() => {
-      updateScale();
+      rescaleDisplay();
     });
     resizeObserver.observe(container);
 
-    // Connect with container dimensions so server matches our size
-    client.connect(`width=${containerWidth}&height=${containerHeight}`);
+    // Connect
+    client.connect();
 
     return () => {
       resizeObserver.disconnect();
@@ -159,6 +137,15 @@ export function GuacamoleDisplay({ token, className }: Props) {
         position: 'relative',
         background: '#000'
       }}
-    />
+    >
+      <div
+        ref={displayRef}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0
+        }}
+      />
+    </div>
   );
 }
