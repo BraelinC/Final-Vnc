@@ -138,40 +138,22 @@ export function GuacamoleDisplay({ token, className }: Props) {
       console.log('Clipboard to VNC:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
     };
 
-    // Handle browser paste event - send clipboard then Ctrl+Shift+V (for terminals)
-    let isPasting = false;
+    // Sync clipboard on Ctrl+V - just set remote clipboard, user pastes manually in VNC
     const handlePaste = (e: ClipboardEvent) => {
       const text = e.clipboardData?.getData('text/plain');
       if (text) {
-        isPasting = true;
         sendClipboardToRemote(text);
-        // Wait for clipboard to arrive, then send Ctrl+Shift+V (terminal paste)
-        setTimeout(() => {
-          // Ctrl+Shift+V for terminal paste (Ctrl+V doesn't work in terminals!)
-          client.sendKeyEvent(1, 65507); // Ctrl down
-          client.sendKeyEvent(1, 65505); // Shift down
-          client.sendKeyEvent(1, 118);   // v down
-          client.sendKeyEvent(0, 118);   // v up
-          client.sendKeyEvent(0, 65505); // Shift up
-          client.sendKeyEvent(0, 65507); // Ctrl up
-          console.log('Sent Ctrl+Shift+V to VNC after clipboard');
-          isPasting = false;
-        }, 100);
+        console.log('Clipboard synced to VNC - press Ctrl+V (apps) or Ctrl+Shift+V (terminal) in VNC');
       }
+      e.preventDefault(); // Don't let browser do anything else
     };
     container.addEventListener('paste', handlePaste);
 
-    // Keyboard - allow Ctrl+C/X through, block Ctrl+V (we handle it manually)
+    // Keyboard - prevent browser defaults except for clipboard operations
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Allow Ctrl+C/X through to browser for copy
-      if ((e.ctrlKey || e.metaKey) && ['c', 'x'].includes(e.key.toLowerCase())) {
-        return;
-      }
-      // Block Ctrl+V - we handle paste manually via paste event
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
-        // Don't preventDefault - we want paste event to fire
-        // But we'll block it from going to Guacamole.Keyboard
-        return;
+      // Allow Ctrl+C/V/X for clipboard - don't block
+      if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
+        return; // Let browser handle, paste event will fire for Ctrl+V
       }
       e.preventDefault();
       e.stopPropagation();
@@ -186,61 +168,14 @@ export function GuacamoleDisplay({ token, className }: Props) {
     container.addEventListener('keydown', handleKeyDown);
     container.addEventListener('keyup', handleKeyUp);
 
-    // Guacamole keyboard for keysym translation
-    // Track modifier state to detect Ctrl+V
-    let ctrlPressed = false;
-    let blockingPaste = false;
-
+    // Guacamole keyboard - send all keys to VNC
     const keyboard = new Guacamole.Keyboard(container);
     keyboard.onkeydown = (keysym: number) => {
-      // Track Ctrl
-      if (keysym === 65507 || keysym === 65508) {
-        ctrlPressed = true;
-      }
-
-      // Detect Ctrl+V - block it, paste event will handle
-      if (ctrlPressed && keysym === 118) {
-        blockingPaste = true;
-        console.log('Ctrl+V detected - blocking, paste event will handle');
-        return true; // Let browser fire paste event
-      }
-
-      // During paste operation, block everything
-      if (isPasting) {
-        return false;
-      }
-
-      // Normal key - send to VNC
-      // But don't send Ctrl if we're about to paste
-      if ((keysym === 65507 || keysym === 65508) && blockingPaste) {
-        return true;
-      }
-
       console.log(`KEY DOWN: ${keysym}`);
       client.sendKeyEvent(1, keysym);
       return true;
     };
-
     keyboard.onkeyup = (keysym: number) => {
-      // Track Ctrl release
-      if (keysym === 65507 || keysym === 65508) {
-        ctrlPressed = false;
-        if (blockingPaste) {
-          blockingPaste = false;
-          return; // Don't send Ctrl release for paste
-        }
-      }
-
-      // Block v release if we blocked the press
-      if (keysym === 118 && blockingPaste) {
-        return;
-      }
-
-      // During paste operation, block everything
-      if (isPasting) {
-        return;
-      }
-
       console.log(`KEY UP: ${keysym}`);
       client.sendKeyEvent(0, keysym);
     };
