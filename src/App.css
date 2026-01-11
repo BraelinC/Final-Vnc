@@ -1,0 +1,234 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #1a1a2e;
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  outline: none;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #0f3460;
+  z-index: 10;
+}
+
+.header h1 {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.dots {
+  display: flex;
+  gap: 10px;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #333;
+  border: 2px solid #555;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dot:hover {
+  background: #555;
+}
+
+.dot.active {
+  background: #e94560;
+  border-color: #e94560;
+  transform: scale(1.2);
+}
+
+.header-info {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+/* Navigation Arrows */
+.nav-arrow {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  background: rgba(233, 69, 96, 0.9);
+  border: none;
+  color: #fff;
+  width: 50px;
+  height: 80px;
+  cursor: pointer;
+  font-size: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.nav-arrow:hover {
+  background: #e94560;
+}
+
+.nav-arrow.left {
+  left: 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.nav-arrow.right {
+  right: 0;
+  border-radius: 8px 0 0 8px;
+}
+
+/* Carousel */
+.carousel {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.carousel-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.4s ease;
+}
+
+.slide {
+  min-width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vnc-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+}
+
+/* Loading Placeholder */
+.loading-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: #16213e;
+  width: 80%;
+  height: 70%;
+  border-radius: 12px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #333;
+  border-top-color: #e94560;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-placeholder p {
+  color: #888;
+  font-size: 1.1rem;
+}
+
+.load-btn {
+  background: #e94560;
+  border: none;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.load-btn:hover {
+  background: #ff6b6b;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: #0f3460;
+  z-index: 10;
+}
+
+.ssh-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ssh-label {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.ssh-cmd {
+  background: #1a1a2e;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ssh-cmd:hover {
+  background: #2a2a4e;
+}
+
+.nav-hint {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 1rem;
+  }
+
+  .nav-arrow {
+    width: 40px;
+    height: 60px;
+    font-size: 2rem;
+  }
+
+  .ssh-cmd {
+    max-width: 200px;
+    font-size: 0.7rem;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
