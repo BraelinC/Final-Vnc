@@ -9,6 +9,8 @@ interface Props {
 export function GuacamoleDisplay({ token, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Guacamole.Client | null>(null);
+  const scaleRef = useRef<number>(1);
+  const offsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const connect = useCallback(() => {
     if (!containerRef.current) return;
@@ -62,6 +64,10 @@ export function GuacamoleDisplay({ token, className }: Props) {
         const offsetY = (currentContainerHeight - scaledHeight) / 2;
         displayElement.style.left = `${offsetX}px`;
         displayElement.style.top = `${offsetY}px`;
+
+        // Store scale and offset for mouse coordinate conversion
+        scaleRef.current = scale;
+        offsetRef.current = { x: offsetX, y: offsetY };
       }
     };
 
@@ -86,7 +92,14 @@ export function GuacamoleDisplay({ token, className }: Props) {
     const mouse = new Guacamole.Mouse(displayElement);
     mouse.onEach(['mousedown', 'mouseup', 'mousemove'], (e) => {
       const mouseEvent = e as Guacamole.Mouse.Event;
-      client.sendMouseState(mouseEvent.state);
+      const state = mouseEvent.state;
+
+      // Convert screen coordinates to VNC coordinates
+      // Account for display scaling and centering offset
+      state.x = state.x / scaleRef.current;
+      state.y = state.y / scaleRef.current;
+
+      client.sendMouseState(state);
     });
 
     // Set up keyboard handling
