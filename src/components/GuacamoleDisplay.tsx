@@ -67,6 +67,9 @@ export function GuacamoleDisplay({ token, className }: Props) {
     const mouse = new Guacamole.Mouse(displayElement);
     mouse.onEach(['mousedown', 'mouseup', 'mousemove'], (e) => {
       const state = (e as Guacamole.Mouse.Event).state;
+      if (e.type === 'mousedown') {
+        console.log(`CLICK at (${state.x}, ${state.y}) - buttons: left=${state.left}, right=${state.right}, middle=${state.middle}`);
+      }
       client.sendMouseState(state);
     });
 
