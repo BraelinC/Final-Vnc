@@ -28,6 +28,8 @@ export function GuacamoleDisplay({ token, className }: Props) {
 
     // Get container dimensions
     const container = containerRef.current;
+    const containerWidth = container.offsetWidth;
+    const containerHeight = container.offsetHeight;
 
     // Clear container and add display
     container.innerHTML = '';
@@ -42,22 +44,22 @@ export function GuacamoleDisplay({ token, className }: Props) {
 
     // Handle display resize - scale to fit container and center
     const updateScale = () => {
-      const containerWidth = container.offsetWidth;
-      const containerHeight = container.offsetHeight;
+      const currentContainerWidth = container.offsetWidth;
+      const currentContainerHeight = container.offsetHeight;
       const displayWidth = display.getWidth();
       const displayHeight = display.getHeight();
 
-      if (displayWidth && displayHeight && containerWidth && containerHeight) {
-        const scaleX = containerWidth / displayWidth;
-        const scaleY = containerHeight / displayHeight;
+      if (displayWidth && displayHeight && currentContainerWidth && currentContainerHeight) {
+        const scaleX = currentContainerWidth / displayWidth;
+        const scaleY = currentContainerHeight / displayHeight;
         const scale = Math.min(scaleX, scaleY);
         display.scale(scale);
 
         // Center the display
         const scaledWidth = displayWidth * scale;
         const scaledHeight = displayHeight * scale;
-        const offsetX = (containerWidth - scaledWidth) / 2;
-        const offsetY = (containerHeight - scaledHeight) / 2;
+        const offsetX = (currentContainerWidth - scaledWidth) / 2;
+        const offsetY = (currentContainerHeight - scaledHeight) / 2;
         displayElement.style.left = `${offsetX}px`;
         displayElement.style.top = `${offsetY}px`;
       }
@@ -103,8 +105,8 @@ export function GuacamoleDisplay({ token, className }: Props) {
     });
     resizeObserver.observe(container);
 
-    // Connect
-    client.connect();
+    // Connect with container dimensions so server matches our size
+    client.connect(`width=${containerWidth}&height=${containerHeight}`);
 
     return () => {
       resizeObserver.disconnect();
