@@ -88,13 +88,24 @@ export function GuacamoleDisplay({ token, className }: Props) {
       };
     };
 
-    // Helper: Send Shift+Insert (universal paste that works in terminals AND apps)
-    const sendPasteKeys = () => {
-      client.sendKeyEvent(1, 65505); // Shift down
-      client.sendKeyEvent(1, 65379); // Insert down
-      client.sendKeyEvent(0, 65379); // Insert up
-      client.sendKeyEvent(0, 65505); // Shift up
-      console.log('Sent Shift+Insert paste keys');
+    // Type text directly by sending key events for each character
+    const typeText = (text: string) => {
+      for (const char of text) {
+        const code = char.charCodeAt(0);
+        // For basic ASCII, keysym = char code
+        // For special chars we'd need a lookup table
+        if (code >= 32 && code <= 126) {
+          client.sendKeyEvent(1, code); // key down
+          client.sendKeyEvent(0, code); // key up
+        } else if (char === '\n') {
+          client.sendKeyEvent(1, 65293); // Return down
+          client.sendKeyEvent(0, 65293); // Return up
+        } else if (char === '\t') {
+          client.sendKeyEvent(1, 65289); // Tab down
+          client.sendKeyEvent(0, 65289); // Tab up
+        }
+      }
+      console.log('Typed text directly:', text.substring(0, 30) + (text.length > 30 ? '...' : ''));
     };
 
     // Native mouse handling - bypass broken Guacamole.Mouse
@@ -114,17 +125,13 @@ export function GuacamoleDisplay({ token, className }: Props) {
       mouseState.middle = (e.buttons & 4) !== 0;
       mouseState.right = (e.buttons & 2) !== 0;
 
-      // Middle-click paste: sync clipboard then send Shift+Insert
+      // Middle-click paste: type clipboard text directly
       if (e.type === 'mousedown' && e.button === 1) {
-        console.log('Middle-click detected - pasting clipboard');
+        console.log('Middle-click detected - typing clipboard');
         try {
           const text = await navigator.clipboard.readText();
           if (text) {
-            sendClipboardToRemote(text);
-            // Wait for clipboard to sync, then paste
-            setTimeout(() => {
-              sendPasteKeys();
-            }, 50);
+            typeText(text);
           }
         } catch (err) {
           console.error('Failed to read clipboard for middle-click paste:', err);
@@ -166,15 +173,12 @@ export function GuacamoleDisplay({ token, className }: Props) {
       console.log('Clipboard to VNC:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
     };
 
-    // Ctrl+V paste: sync clipboard then send Shift+Insert
+    // Ctrl+V paste: type clipboard text directly
     const handlePaste = (e: ClipboardEvent) => {
       const text = e.clipboardData?.getData('text/plain');
       if (text) {
-        sendClipboardToRemote(text);
-        // Wait for clipboard to sync, then paste with Shift+Insert
-        setTimeout(() => {
-          sendPasteKeys();
-        }, 50);
+        console.log('Ctrl+V paste - typing clipboard');
+        typeText(text);
       }
       e.preventDefault();
     };
