@@ -75,17 +75,12 @@ export function GuacamoleDisplay({ token, className }: Props) {
     // Mouse on displayWrapper (guacozy style)
     const mouse = new Guacamole.Mouse(displayWrapper);
 
-    mouse.onmousemove = (mouseState: Guacamole.Mouse.State) => {
-      mouseState.x = mouseState.x / scaleRef.current;
-      mouseState.y = mouseState.y / scaleRef.current;
-      client.sendMouseState(mouseState);
-    };
-
-    mouse.onmousedown = mouse.onmouseup = (mouseState: Guacamole.Mouse.State) => {
-      mouseState.x = mouseState.x / scaleRef.current;
-      mouseState.y = mouseState.y / scaleRef.current;
-      client.sendMouseState(mouseState);
-    };
+    mouse.onEach(['mousedown', 'mouseup', 'mousemove'], (e) => {
+      const state = (e as Guacamole.Mouse.Event).state;
+      state.x = state.x / scaleRef.current;
+      state.y = state.y / scaleRef.current;
+      client.sendMouseState(state);
+    });
 
     // Keyboard handling
     const keyboard = new Guacamole.Keyboard(document);
