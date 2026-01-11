@@ -38,7 +38,10 @@ export function GuacamoleDisplay({ token, className }: Props) {
     displayElement.style.top = '0';
     container.appendChild(displayElement);
 
-    // NO SCALING - display at 1:1, container scrolls if needed
+    // Log when display resizes (needed for rendering)
+    display.onresize = () => {
+      console.log(`Display size: ${display.getWidth()}x${display.getHeight()}`);
+    };
 
     client.onerror = (error) => {
       console.error('Guacamole error:', error);
