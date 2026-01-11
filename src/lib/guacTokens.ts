@@ -1,7 +1,7 @@
 import CryptoJS from 'crypto-js';
 
-// Must match the key in /opt/guacamole-lite/server.js
-const CIPHER_KEY = 'MySuperSecretKeyForEncryption!!';
+// Must match the key in /opt/guacamole-lite/server.js (exactly 32 characters)
+const CIPHER_KEY = 'MySecretKeyForGuacamole123456789';
 
 interface GuacConnection {
   connection: {
