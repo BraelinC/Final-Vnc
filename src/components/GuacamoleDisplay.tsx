@@ -40,7 +40,7 @@ export function GuacamoleDisplay({ token, className }: Props) {
     displayElement.style.top = '0';
     container.appendChild(displayElement);
 
-    // Handle display resize - scale to fit container
+    // Handle display resize - scale to fit container and center
     const updateScale = () => {
       const containerWidth = container.offsetWidth;
       const containerHeight = container.offsetHeight;
@@ -52,6 +52,14 @@ export function GuacamoleDisplay({ token, className }: Props) {
         const scaleY = containerHeight / displayHeight;
         const scale = Math.min(scaleX, scaleY);
         display.scale(scale);
+
+        // Center the display
+        const scaledWidth = displayWidth * scale;
+        const scaledHeight = displayHeight * scale;
+        const offsetX = (containerWidth - scaledWidth) / 2;
+        const offsetY = (containerHeight - scaledHeight) / 2;
+        displayElement.style.left = `${offsetX}px`;
+        displayElement.style.top = `${offsetY}px`;
       }
     };
 
