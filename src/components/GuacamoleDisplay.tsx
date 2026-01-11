@@ -104,12 +104,25 @@ export function GuacamoleDisplay({ token, className }: Props) {
     const focusOnClick = () => container.focus();
     container.addEventListener('mousedown', focusOnClick);
 
-    // Keyboard - attach to container so it only captures when focused
+    // Keyboard - prevent browser from handling special keys
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent browser defaults for all keys when VNC is focused
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    container.addEventListener('keydown', handleKeyDown);
+    container.addEventListener('keyup', handleKeyUp);
+
+    // Guacamole keyboard for keysym translation
     const keyboard = new Guacamole.Keyboard(container);
     keyboard.onkeydown = (keysym: number) => {
       console.log(`KEY DOWN: ${keysym}`);
       client.sendKeyEvent(1, keysym);
-      return true;
+      return false; // Let Guacamole know we handled it
     };
     keyboard.onkeyup = (keysym: number) => {
       console.log(`KEY UP: ${keysym}`);
@@ -124,6 +137,8 @@ export function GuacamoleDisplay({ token, className }: Props) {
       container.removeEventListener('mouseup', handleMouse);
       container.removeEventListener('mousemove', handleMouse);
       container.removeEventListener('mousedown', focusOnClick);
+      container.removeEventListener('keydown', handleKeyDown);
+      container.removeEventListener('keyup', handleKeyUp);
       keyboard.onkeydown = null;
       keyboard.onkeyup = null;
       keyboard.reset();
