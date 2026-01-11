@@ -88,10 +88,19 @@ export function GuacamoleDisplay({ token, className }: Props) {
       };
     };
 
+    // Helper: Send Shift+Insert (universal paste that works in terminals AND apps)
+    const sendPasteKeys = () => {
+      client.sendKeyEvent(1, 65505); // Shift down
+      client.sendKeyEvent(1, 65379); // Insert down
+      client.sendKeyEvent(0, 65379); // Insert up
+      client.sendKeyEvent(0, 65505); // Shift up
+      console.log('Sent Shift+Insert paste keys');
+    };
+
     // Native mouse handling - bypass broken Guacamole.Mouse
     const mouseState = new Guacamole.Mouse.State(0, 0, false, false, false, false, false);
 
-    const handleMouse = (e: MouseEvent) => {
+    const handleMouse = async (e: MouseEvent) => {
       const rect = container.getBoundingClientRect();
       const scale = scaleRef.current;
 
@@ -105,8 +114,27 @@ export function GuacamoleDisplay({ token, className }: Props) {
       mouseState.middle = (e.buttons & 4) !== 0;
       mouseState.right = (e.buttons & 2) !== 0;
 
+      // Middle-click paste: sync clipboard then send Shift+Insert
+      if (e.type === 'mousedown' && e.button === 1) {
+        console.log('Middle-click detected - pasting clipboard');
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            sendClipboardToRemote(text);
+            // Wait for clipboard to sync, then paste
+            setTimeout(() => {
+              sendPasteKeys();
+            }, 50);
+          }
+        } catch (err) {
+          console.error('Failed to read clipboard for middle-click paste:', err);
+        }
+        e.preventDefault();
+        return; // Don't send middle-click to VNC
+      }
+
       if (e.type === 'mousedown') {
-        console.log(`CLICK at (${x}, ${y}) scale=${scale.toFixed(3)} raw=(${e.clientX - rect.left}, ${e.clientY - rect.top})`);
+        console.log(`CLICK at (${x}, ${y}) scale=${scale.toFixed(3)} button=${e.button}`);
       }
 
       client.sendMouseState(mouseState);
@@ -138,22 +166,29 @@ export function GuacamoleDisplay({ token, className }: Props) {
       console.log('Clipboard to VNC:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
     };
 
-    // Sync clipboard on Ctrl+V - just set remote clipboard, user pastes manually in VNC
+    // Ctrl+V paste: sync clipboard then send Shift+Insert
     const handlePaste = (e: ClipboardEvent) => {
       const text = e.clipboardData?.getData('text/plain');
       if (text) {
         sendClipboardToRemote(text);
-        console.log('Clipboard synced to VNC - press Ctrl+V (apps) or Ctrl+Shift+V (terminal) in VNC');
+        // Wait for clipboard to sync, then paste with Shift+Insert
+        setTimeout(() => {
+          sendPasteKeys();
+        }, 50);
       }
-      e.preventDefault(); // Don't let browser do anything else
+      e.preventDefault();
     };
     container.addEventListener('paste', handlePaste);
 
-    // Keyboard - prevent browser defaults except for clipboard operations
+    // Keyboard - block Ctrl+V from going to VNC (we handle it via paste event)
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Allow Ctrl+C/V/X for clipboard - don't block
-      if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
-        return; // Let browser handle, paste event will fire for Ctrl+V
+      // Allow Ctrl+C/X through to browser
+      if ((e.ctrlKey || e.metaKey) && ['c', 'x'].includes(e.key.toLowerCase())) {
+        return;
+      }
+      // Ctrl+V - let paste event handle it, don't send to VNC
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+        return; // paste event will fire and handle this
       }
       e.preventDefault();
       e.stopPropagation();
@@ -168,14 +203,25 @@ export function GuacamoleDisplay({ token, className }: Props) {
     container.addEventListener('keydown', handleKeyDown);
     container.addEventListener('keyup', handleKeyUp);
 
-    // Guacamole keyboard - send all keys to VNC
+    // Guacamole keyboard - send all keys EXCEPT Ctrl+V to VNC
+    let ctrlHeld = false;
     const keyboard = new Guacamole.Keyboard(container);
     keyboard.onkeydown = (keysym: number) => {
+      // Track Ctrl
+      if (keysym === 65507 || keysym === 65508) ctrlHeld = true;
+      // Block Ctrl+V - paste event handles it
+      if (ctrlHeld && keysym === 118) {
+        console.log('Blocking Ctrl+V - paste event will handle');
+        return true;
+      }
       console.log(`KEY DOWN: ${keysym}`);
       client.sendKeyEvent(1, keysym);
       return true;
     };
     keyboard.onkeyup = (keysym: number) => {
+      if (keysym === 65507 || keysym === 65508) ctrlHeld = false;
+      // Block Ctrl+V release
+      if (ctrlHeld && keysym === 118) return;
       console.log(`KEY UP: ${keysym}`);
       client.sendKeyEvent(0, keysym);
     };
