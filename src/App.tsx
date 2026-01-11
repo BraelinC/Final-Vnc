@@ -171,6 +171,7 @@ function App() {
                   />
                 ) : desktop.type === 'guacamole' ? (
                   <SplitDesktop
+                    fullscreen={true}
                     top={
                       <GuacamoleDisplay
                         token={desktop.vncToken!}
