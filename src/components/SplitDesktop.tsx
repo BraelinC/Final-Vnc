@@ -1,25 +1,25 @@
 import './SplitDesktop.css';
 
 interface Props {
-  top: React.ReactNode;
-  bottom: React.ReactNode;
-  topHeight?: string; // e.g., "65%", "70%"
-  bottomHeight?: string; // e.g., "35%", "30%"
+  left: React.ReactNode;
+  right: React.ReactNode;
+  leftWidth?: string; // e.g., "70%"
+  rightWidth?: string; // e.g., "30%"
 }
 
 export function SplitDesktop({
-  top,
-  bottom,
-  topHeight = '65%',
-  bottomHeight = '35%'
+  left,
+  right,
+  leftWidth = '70%',
+  rightWidth = '30%'
 }: Props) {
   return (
     <div className="split-desktop">
-      <div className="split-top" style={{ height: topHeight }}>
-        {top}
+      <div className="split-left" style={{ width: leftWidth }}>
+        {left}
       </div>
-      <div className="split-bottom" style={{ height: bottomHeight }}>
-        {bottom}
+      <div className="split-right" style={{ width: rightWidth }}>
+        {right}
       </div>
     </div>
   );
