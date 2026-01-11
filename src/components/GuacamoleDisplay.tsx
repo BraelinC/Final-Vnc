@@ -8,11 +8,11 @@ interface Props {
 
 export function GuacamoleDisplay({ token, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const displayRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Guacamole.Client | null>(null);
+  const scaleRef = useRef<number>(1);
 
   const connect = useCallback(() => {
-    if (!containerRef.current || !displayRef.current) return;
+    if (!containerRef.current) return;
 
     // Clean up existing client
     if (clientRef.current) {
@@ -27,44 +27,57 @@ export function GuacamoleDisplay({ token, className }: Props) {
     const client = new Guacamole.Client(tunnel);
     clientRef.current = client;
 
-    const displayWrapper = displayRef.current;
-
-    // Clear and add display element to wrapper
-    displayWrapper.innerHTML = '';
-    displayWrapper.appendChild(client.getDisplay().getElement());
-
-    // No scaling - keep 1:1 pixel ratio for accurate mouse
+    const container = containerRef.current;
     const display = client.getDisplay();
-    display.onresize = () => {
-      // Match wrapper size to display size
-      const w = display.getWidth();
-      const h = display.getHeight();
-      if (w && h) {
-        displayWrapper.style.width = w + 'px';
-        displayWrapper.style.height = h + 'px';
+    const displayElement = display.getElement();
+
+    // Clear container and add display
+    container.innerHTML = '';
+    container.appendChild(displayElement);
+
+    // Scale display to fit container
+    const rescaleDisplay = () => {
+      const displayWidth = display.getWidth();
+      const displayHeight = display.getHeight();
+      const containerWidth = container.offsetWidth;
+      const containerHeight = container.offsetHeight;
+
+      if (displayWidth && displayHeight && containerWidth && containerHeight) {
+        const scale = Math.min(
+          containerWidth / displayWidth,
+          containerHeight / displayHeight,
+          1
+        );
+        display.scale(scale);
+        scaleRef.current = scale;
       }
     };
 
-    // Handle errors
+    display.onresize = rescaleDisplay;
+
     client.onerror = (error) => {
       console.error('Guacamole error:', error);
     };
 
-    // Handle state changes
     client.onstatechange = (state) => {
       console.log('Guacamole state:', state);
+      if (state === 3) {
+        setTimeout(rescaleDisplay, 100);
+      }
     };
 
-    // Mouse on displayWrapper - NO scaling, raw coordinates
-    const mouse = new Guacamole.Mouse(displayWrapper);
+    // Mouse directly on the display element
+    const mouse = new Guacamole.Mouse(displayElement);
 
     mouse.onEach(['mousedown', 'mouseup', 'mousemove'], (e) => {
       const state = (e as Guacamole.Mouse.Event).state;
-      // Send raw coordinates - no transformation
+      // Divide by scale to get VNC coordinates
+      state.x = state.x / scaleRef.current;
+      state.y = state.y / scaleRef.current;
       client.sendMouseState(state);
     });
 
-    // Keyboard handling
+    // Keyboard
     const keyboard = new Guacamole.Keyboard(document);
     keyboard.onkeydown = (keysym: number) => {
       client.sendKeyEvent(1, keysym);
@@ -74,10 +87,14 @@ export function GuacamoleDisplay({ token, className }: Props) {
       client.sendKeyEvent(0, keysym);
     };
 
-    // Connect
+    // Resize observer
+    const resizeObserver = new ResizeObserver(rescaleDisplay);
+    resizeObserver.observe(container);
+
     client.connect();
 
     return () => {
+      resizeObserver.disconnect();
       keyboard.onkeydown = null;
       keyboard.onkeyup = null;
       keyboard.reset();
@@ -107,15 +124,6 @@ export function GuacamoleDisplay({ token, className }: Props) {
         position: 'relative',
         background: '#000'
       }}
-    >
-      <div
-        ref={displayRef}
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0
-        }}
-      />
-    </div>
+    />
   );
 }
