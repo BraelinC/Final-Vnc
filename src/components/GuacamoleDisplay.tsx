@@ -96,13 +96,23 @@ export function GuacamoleDisplay({ token, className }: Props) {
     container.addEventListener('mousemove', handleMouse);
     container.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    // Keyboard
-    const keyboard = new Guacamole.Keyboard(document);
+    // Make container focusable and focus on click
+    container.tabIndex = 0;
+    container.style.outline = 'none';
+    container.focus();
+
+    const focusOnClick = () => container.focus();
+    container.addEventListener('mousedown', focusOnClick);
+
+    // Keyboard - attach to container so it only captures when focused
+    const keyboard = new Guacamole.Keyboard(container);
     keyboard.onkeydown = (keysym: number) => {
+      console.log(`KEY DOWN: ${keysym}`);
       client.sendKeyEvent(1, keysym);
       return true;
     };
     keyboard.onkeyup = (keysym: number) => {
+      console.log(`KEY UP: ${keysym}`);
       client.sendKeyEvent(0, keysym);
     };
 
@@ -113,6 +123,7 @@ export function GuacamoleDisplay({ token, className }: Props) {
       container.removeEventListener('mousedown', handleMouse);
       container.removeEventListener('mouseup', handleMouse);
       container.removeEventListener('mousemove', handleMouse);
+      container.removeEventListener('mousedown', focusOnClick);
       keyboard.onkeydown = null;
       keyboard.onkeyup = null;
       keyboard.reset();
