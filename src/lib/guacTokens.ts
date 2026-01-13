@@ -34,6 +34,86 @@ export function generateGuacToken(connection: GuacConnection): string {
 
 // Pre-generated tokens for our desktops
 export const guacTokens = {
+  claude1Vnc: generateGuacToken({
+    connection: {
+      type: 'vnc',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 5901,
+        password: '11142006'
+      }
+    }
+  }),
+  claude1Ssh: generateGuacToken({
+    connection: {
+      type: 'ssh',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 22,
+        username: 'claude'
+      }
+    }
+  }),
+  claude2Vnc: generateGuacToken({
+    connection: {
+      type: 'vnc',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 5902,
+        password: '11142006'
+      }
+    }
+  }),
+  claude2Ssh: generateGuacToken({
+    connection: {
+      type: 'ssh',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 22,
+        username: 'claude2'
+      }
+    }
+  }),
+  claude3Vnc: generateGuacToken({
+    connection: {
+      type: 'vnc',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 5903,
+        password: '11142006'
+      }
+    }
+  }),
+  claude3Ssh: generateGuacToken({
+    connection: {
+      type: 'ssh',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 22,
+        username: 'claude3'
+      }
+    }
+  }),
+  claude4Vnc: generateGuacToken({
+    connection: {
+      type: 'vnc',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 5904,
+        password: '11142006'
+      }
+    }
+  }),
+  claude4Ssh: generateGuacToken({
+    connection: {
+      type: 'ssh',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 22,
+        username: 'claude4'
+      }
+    }
+  }),
   claude5Vnc: generateGuacToken({
     connection: {
       type: 'vnc',

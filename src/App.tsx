@@ -21,33 +21,36 @@ const desktops: Desktop[] = [
     id: 1,
     name: 'Desktop 1',
     user: 'claude',
-    type: 'novnc',
-    url: 'https://vps2.braelin.uk/vnc.html?password=11142006&autoconnect=true&resize=scale',
+    type: 'guacamole',
+    vncToken: guacTokens.claude1Vnc,
+    sshToken: guacTokens.claude1Ssh,
     sshCmd: 'ssh root@38.242.207.4 -t "su - claude -c tmux"'
   },
   {
     id: 2,
     name: 'Desktop 2',
     user: 'claude2',
-    type: 'novnc-split',
-    url: 'https://vps2-2.braelin.uk/vnc.html?password=11142006&autoconnect=true&resize=scale',
-    termUrl: 'https://term.braelin.uk/',
+    type: 'guacamole',
+    vncToken: guacTokens.claude2Vnc,
+    sshToken: guacTokens.claude2Ssh,
     sshCmd: 'ssh root@38.242.207.4 -t "su - claude2 -c tmux"'
   },
   {
     id: 3,
     name: 'Desktop 3',
     user: 'claude3',
-    type: 'novnc',
-    url: 'https://vps2-3.braelin.uk/vnc.html?password=11142006&autoconnect=true&resize=scale',
+    type: 'guacamole',
+    vncToken: guacTokens.claude3Vnc,
+    sshToken: guacTokens.claude3Ssh,
     sshCmd: 'ssh root@38.242.207.4 -t "su - claude3 -c tmux"'
   },
   {
     id: 4,
     name: 'Desktop 4',
     user: 'claude4',
-    type: 'novnc',
-    url: 'https://vps2-4.braelin.uk/vnc.html?password=11142006&autoconnect=true&resize=scale',
+    type: 'guacamole',
+    vncToken: guacTokens.claude4Vnc,
+    sshToken: guacTokens.claude4Ssh,
     sshCmd: 'ssh root@38.242.207.4 -t "su - claude4 -c tmux"'
   },
   {
@@ -148,46 +151,20 @@ function App() {
           {desktops.map((desktop, index) => (
             <div key={desktop.id} className="slide">
               {(index === currentIndex || preloadAll) ? (
-                // Render based on desktop type
-                desktop.type === 'novnc' ? (
-                  <iframe
-                    src={desktop.url}
-                    title={desktop.name}
-                    className="vnc-frame"
-                  />
-                ) : desktop.type === 'novnc-split' ? (
-                  <SplitDesktop
-                    vncDisplay={
-                      <iframe
-                        src={desktop.url}
-                        title={`${desktop.name} VNC`}
-                        className="vnc-frame"
-                      />
-                    }
-                    terminalDisplay={
-                      <iframe
-                        src={desktop.termUrl}
-                        title={`${desktop.name} Terminal`}
-                        className="vnc-frame"
-                      />
-                    }
-                  />
-                ) : desktop.type === 'guacamole' ? (
-                  <SplitDesktop
-                    vncDisplay={
-                      <GuacamoleDisplay
-                        token={desktop.vncToken!}
-                        className="guac-display"
-                      />
-                    }
-                    terminalDisplay={
-                      <GuacamoleDisplay
-                        token={desktop.sshToken!}
-                        className="guac-display"
-                      />
-                    }
-                  />
-                ) : null
+                <SplitDesktop
+                  vncDisplay={
+                    <GuacamoleDisplay
+                      token={desktop.vncToken!}
+                      className="guac-display"
+                    />
+                  }
+                  terminalDisplay={
+                    <GuacamoleDisplay
+                      token={desktop.sshToken!}
+                      className="guac-display"
+                    />
+                  }
+                />
               ) : (
                 <div className="loading-placeholder">
                   <div className="spinner"></div>
