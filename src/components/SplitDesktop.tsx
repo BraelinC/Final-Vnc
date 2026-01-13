@@ -19,10 +19,8 @@ export function SplitDesktop({ vncDisplay, terminalDisplay }: Props) {
         <div className="split-left">
           {vncDisplay}
         </div>
-        <div className="split-divider">
-          <button className="view-toggle" onClick={toggleView}>
-            ⬍ Stack
-          </button>
+        <div className="split-divider" onClick={toggleView} title="Stack vertically">
+          <span className="chevron">«</span>
         </div>
         <div className="split-right">
           {terminalDisplay}
@@ -36,10 +34,8 @@ export function SplitDesktop({ vncDisplay, terminalDisplay }: Props) {
       <div className="stacked-top">
         {vncDisplay}
       </div>
-      <div className="stacked-divider">
-        <button className="view-toggle" onClick={toggleView}>
-          ⬌ Split
-        </button>
+      <div className="stacked-divider" onClick={toggleView} title="Split side-by-side">
+        <span className="chevron">»</span>
       </div>
       <div className="stacked-bottom">
         {terminalDisplay}
