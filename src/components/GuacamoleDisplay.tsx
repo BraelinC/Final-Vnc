@@ -156,10 +156,12 @@ export function GuacamoleDisplay({ token, className }: Props) {
       e.preventDefault();
     };
 
-    // Mouse wheel scrolling
+    // Mouse wheel scrolling - send tmux copy-mode commands for SSH terminal
+    let inCopyMode = false;
+    let copyModeTimeout: ReturnType<typeof setTimeout> | null = null;
+
     const handleWheel = (e: WheelEvent) => {
       if (!isConnected) {
-        console.log('Wheel: not connected');
         return;
       }
 
@@ -168,19 +170,43 @@ export function GuacamoleDisplay({ token, className }: Props) {
       const x = Math.floor((e.clientX - rect.left) / scale);
       const y = Math.floor((e.clientY - rect.top) / scale);
 
-      // Send mouse scroll events
+      // Send mouse scroll events for VNC
       // Constructor: State(x, y, left, middle, right, up, down)
       if (e.deltaY < 0) {
-        // Scroll up
-        console.log(`SCROLL UP at (${x}, ${y})`);
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, true, false));
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, false));
       } else if (e.deltaY > 0) {
-        // Scroll down
-        console.log(`SCROLL DOWN at (${x}, ${y})`);
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, true));
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, false));
       }
+
+      // For SSH/tmux: enter copy mode and scroll with PageUp/PageDown
+      if (!inCopyMode) {
+        // Send Ctrl+B [ to enter tmux copy mode
+        client.sendKeyEvent(1, 65507); // Ctrl down
+        client.sendKeyEvent(1, 98);    // 'b' down
+        client.sendKeyEvent(0, 98);    // 'b' up
+        client.sendKeyEvent(0, 65507); // Ctrl up
+        client.sendKeyEvent(1, 91);    // '[' down
+        client.sendKeyEvent(0, 91);    // '[' up
+        inCopyMode = true;
+        console.log('Entered tmux copy mode');
+      }
+
+      // Send Page Up or Page Down
+      if (e.deltaY < 0) {
+        client.sendKeyEvent(1, 65365); // Page_Up
+        client.sendKeyEvent(0, 65365);
+      } else {
+        client.sendKeyEvent(1, 65366); // Page_Down
+        client.sendKeyEvent(0, 65366);
+      }
+
+      // Reset copy mode flag after 3 seconds of no scrolling
+      if (copyModeTimeout) clearTimeout(copyModeTimeout);
+      copyModeTimeout = setTimeout(() => {
+        inCopyMode = false;
+      }, 3000);
 
       e.preventDefault();
     };
