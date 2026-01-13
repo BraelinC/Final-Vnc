@@ -11,6 +11,7 @@ interface GuacConnection {
       port: number | string;
       password?: string;
       username?: string;
+      command?: string;
     };
   };
 }
@@ -51,7 +52,8 @@ export const guacTokens = {
         hostname: '127.0.0.1',
         port: 22,
         username: 'claude',
-        password: '11142006'
+        password: '11142006',
+        command: 'tmux attach -t claude1 || tmux new -s claude1'
       }
     }
   }),
@@ -72,7 +74,8 @@ export const guacTokens = {
         hostname: '127.0.0.1',
         port: 22,
         username: 'claude2',
-        password: '11142006'
+        password: '11142006',
+        command: 'tmux attach -t claude2 || tmux new -s claude2'
       }
     }
   }),
@@ -93,7 +96,8 @@ export const guacTokens = {
         hostname: '127.0.0.1',
         port: 22,
         username: 'claude3',
-        password: '11142006'
+        password: '11142006',
+        command: 'tmux attach -t claude3 || tmux new -s claude3'
       }
     }
   }),
@@ -114,7 +118,8 @@ export const guacTokens = {
         hostname: '127.0.0.1',
         port: 22,
         username: 'claude4',
-        password: '11142006'
+        password: '11142006',
+        command: 'tmux attach -t claude4 || tmux new -s claude4'
       }
     }
   }),
@@ -135,7 +140,8 @@ export const guacTokens = {
         hostname: '127.0.0.1',
         port: 22,
         username: 'claude5',
-        password: '11142006'
+        password: '11142006',
+        command: 'tmux attach -t claude5 || tmux new -s claude5'
       }
     }
   }),
@@ -156,7 +162,8 @@ export const guacTokens = {
         hostname: '127.0.0.1',
         port: 22,
         username: 'claude6',
-        password: '11142006'
+        password: '11142006',
+        command: 'tmux attach -t claude6 || tmux new -s claude6'
       }
     }
   })
