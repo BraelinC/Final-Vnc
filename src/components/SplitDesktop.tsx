@@ -7,7 +7,7 @@ interface Props {
 }
 
 export function SplitDesktop({ vncDisplay, terminalDisplay }: Props) {
-  const [viewMode, setViewMode] = useState<'stacked' | 'split'>('stacked');
+  const [viewMode, setViewMode] = useState<'stacked' | 'split'>('split');
 
   const toggleView = () => {
     setViewMode(viewMode === 'stacked' ? 'split' : 'stacked');
