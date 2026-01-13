@@ -12,6 +12,7 @@ interface GuacConnection {
       password?: string;
       username?: string;
       command?: string;
+      scrollback?: number;
     };
   };
 }
@@ -53,7 +54,8 @@ export const guacTokens = {
         port: 22,
         username: 'claude',
         password: '11142006',
-        command: 'tmux attach -t claude1 || tmux new -s claude1'
+        command: 'tmux attach -t claude1 || tmux new -s claude1',
+        scrollback: 5000
       }
     }
   }),
@@ -75,7 +77,8 @@ export const guacTokens = {
         port: 22,
         username: 'claude2',
         password: '11142006',
-        command: 'tmux attach -t claude2 || tmux new -s claude2'
+        command: 'tmux attach -t claude2 || tmux new -s claude2',
+        scrollback: 5000
       }
     }
   }),
@@ -97,7 +100,8 @@ export const guacTokens = {
         port: 22,
         username: 'claude3',
         password: '11142006',
-        command: 'tmux attach -t claude3 || tmux new -s claude3'
+        command: 'tmux attach -t claude3 || tmux new -s claude3',
+        scrollback: 5000
       }
     }
   }),
@@ -119,7 +123,8 @@ export const guacTokens = {
         port: 22,
         username: 'claude4',
         password: '11142006',
-        command: 'tmux attach -t claude4 || tmux new -s claude4'
+        command: 'tmux attach -t claude4 || tmux new -s claude4',
+        scrollback: 5000
       }
     }
   }),
@@ -141,7 +146,8 @@ export const guacTokens = {
         port: 22,
         username: 'claude5',
         password: '11142006',
-        command: 'tmux attach -t claude5 || tmux new -s claude5'
+        command: 'tmux attach -t claude5 || tmux new -s claude5',
+        scrollback: 5000
       }
     }
   }),
@@ -163,7 +169,8 @@ export const guacTokens = {
         port: 22,
         username: 'claude6',
         password: '11142006',
-        command: 'tmux attach -t claude6 || tmux new -s claude6'
+        command: 'tmux attach -t claude6 || tmux new -s claude6',
+        scrollback: 5000
       }
     }
   })
