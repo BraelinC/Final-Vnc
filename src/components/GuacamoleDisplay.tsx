@@ -158,29 +158,31 @@ export function GuacamoleDisplay({ token, className }: Props) {
 
     // Mouse wheel scrolling
     const handleWheel = (e: WheelEvent) => {
-      if (!isConnected) return;
+      if (!isConnected) {
+        console.log('Wheel: not connected');
+        return;
+      }
 
       const rect = container.getBoundingClientRect();
       const scale = scaleRef.current;
       const x = Math.floor((e.clientX - rect.left) / scale);
       const y = Math.floor((e.clientY - rect.top) / scale);
 
-      mouseState.x = x;
-      mouseState.y = y;
-
-      // Guacamole uses up/down booleans for scroll
+      // Guacamole uses up/down booleans for scroll (button 4/5)
       if (e.deltaY < 0) {
         // Scroll up
-        mouseState.up = true;
-        client.sendMouseState(mouseState);
-        mouseState.up = false;
-        client.sendMouseState(mouseState);
+        console.log(`SCROLL UP at (${x}, ${y})`);
+        const scrollState = new Guacamole.Mouse.State({ x, y, left: false, middle: false, right: false, up: true, down: false });
+        client.sendMouseState(scrollState);
+        scrollState.up = false;
+        client.sendMouseState(scrollState);
       } else if (e.deltaY > 0) {
         // Scroll down
-        mouseState.down = true;
-        client.sendMouseState(mouseState);
-        mouseState.down = false;
-        client.sendMouseState(mouseState);
+        console.log(`SCROLL DOWN at (${x}, ${y})`);
+        const scrollState = new Guacamole.Mouse.State({ x, y, left: false, middle: false, right: false, up: false, down: true });
+        client.sendMouseState(scrollState);
+        scrollState.down = false;
+        client.sendMouseState(scrollState);
       }
 
       e.preventDefault();
