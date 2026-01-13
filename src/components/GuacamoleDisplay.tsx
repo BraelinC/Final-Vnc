@@ -169,20 +169,17 @@ export function GuacamoleDisplay({ token, className }: Props) {
       const y = Math.floor((e.clientY - rect.top) / scale);
 
       // Guacamole uses up/down booleans for scroll (button 4/5)
+      // Constructor: State(x, y, left, middle, right, up, down)
       if (e.deltaY < 0) {
         // Scroll up
         console.log(`SCROLL UP at (${x}, ${y})`);
-        const scrollState = new Guacamole.Mouse.State({ x, y, left: false, middle: false, right: false, up: true, down: false });
-        client.sendMouseState(scrollState);
-        scrollState.up = false;
-        client.sendMouseState(scrollState);
+        client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, true, false));
+        client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, false));
       } else if (e.deltaY > 0) {
         // Scroll down
         console.log(`SCROLL DOWN at (${x}, ${y})`);
-        const scrollState = new Guacamole.Mouse.State({ x, y, left: false, middle: false, right: false, up: false, down: true });
-        client.sendMouseState(scrollState);
-        scrollState.down = false;
-        client.sendMouseState(scrollState);
+        client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, true));
+        client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, false));
       }
 
       e.preventDefault();
