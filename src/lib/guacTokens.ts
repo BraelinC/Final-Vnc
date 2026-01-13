@@ -50,7 +50,8 @@ export const guacTokens = {
       settings: {
         hostname: '127.0.0.1',
         port: 22,
-        username: 'claude'
+        username: 'claude',
+        password: '11142006'
       }
     }
   }),
@@ -70,7 +71,8 @@ export const guacTokens = {
       settings: {
         hostname: '127.0.0.1',
         port: 22,
-        username: 'claude2'
+        username: 'claude2',
+        password: '11142006'
       }
     }
   }),
@@ -90,7 +92,8 @@ export const guacTokens = {
       settings: {
         hostname: '127.0.0.1',
         port: 22,
-        username: 'claude3'
+        username: 'claude3',
+        password: '11142006'
       }
     }
   }),
@@ -110,7 +113,8 @@ export const guacTokens = {
       settings: {
         hostname: '127.0.0.1',
         port: 22,
-        username: 'claude4'
+        username: 'claude4',
+        password: '11142006'
       }
     }
   }),
@@ -130,7 +134,8 @@ export const guacTokens = {
       settings: {
         hostname: '127.0.0.1',
         port: 22,
-        username: 'claude5'
+        username: 'claude5',
+        password: '11142006'
       }
     }
   }),
@@ -150,7 +155,8 @@ export const guacTokens = {
       settings: {
         hostname: '127.0.0.1',
         port: 22,
-        username: 'claude6'
+        username: 'claude6',
+        password: '11142006'
       }
     }
   })
