@@ -239,10 +239,27 @@ export function GuacamoleDisplay({ token, className }: Props) {
     // Keyboard - block Ctrl+V from going to VNC (we handle it via paste event)
     // Also capture Tab/Shift+Tab to prevent browser focus navigation
     const handleKeyDown = (e: KeyboardEvent) => {
-      // CRITICAL: Capture Tab and Shift+Tab to prevent browser focus change
+      // CRITICAL: Capture Tab and Shift+Tab - send directly to VNC
       if (e.key === 'Tab') {
         e.preventDefault();
         e.stopPropagation();
+        if (isConnected) {
+          if (e.shiftKey) {
+            // Shift+Tab: Send ISO_Left_Tab (0xFE20 = 65056) for reverse tab
+            // Some terminals expect this, others expect Shift+Tab combo
+            // Send both approaches for maximum compatibility
+            console.log('Shift+Tab detected - sending ISO_Left_Tab');
+            client.sendKeyEvent(1, 65505); // Shift down
+            client.sendKeyEvent(1, 65056); // ISO_Left_Tab down (0xFE20)
+            client.sendKeyEvent(0, 65056); // ISO_Left_Tab up
+            client.sendKeyEvent(0, 65505); // Shift up
+          } else {
+            // Regular Tab
+            console.log('Tab detected - sending Tab');
+            client.sendKeyEvent(1, 65289); // Tab down
+            client.sendKeyEvent(0, 65289); // Tab up
+          }
+        }
         return;
       }
       // Allow Ctrl+C/X through to browser
@@ -257,6 +274,12 @@ export function GuacamoleDisplay({ token, className }: Props) {
       e.stopPropagation();
     };
     const handleKeyUp = (e: KeyboardEvent) => {
+      // Tab is fully handled in keydown - ignore keyup
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
         return;
       }
