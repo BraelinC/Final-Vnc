@@ -1,25 +1,48 @@
+import { useState } from 'react';
 import './SplitDesktop.css';
 
 interface Props {
-  left: React.ReactNode;
-  right: React.ReactNode;
-  leftWidth?: string; // e.g., "70%"
-  rightWidth?: string; // e.g., "30%"
+  vncDisplay: React.ReactNode;
+  terminalDisplay: React.ReactNode;
 }
 
-export function SplitDesktop({
-  left,
-  right,
-  leftWidth = '70%',
-  rightWidth = '30%'
-}: Props) {
-  return (
-    <div className="split-desktop">
-      <div className="split-left" style={{ width: leftWidth }}>
-        {left}
+export function SplitDesktop({ vncDisplay, terminalDisplay }: Props) {
+  const [viewMode, setViewMode] = useState<'stacked' | 'split'>('stacked');
+
+  const toggleView = () => {
+    setViewMode(viewMode === 'stacked' ? 'split' : 'stacked');
+  };
+
+  if (viewMode === 'split') {
+    return (
+      <div className="split-container">
+        <div className="split-left">
+          {vncDisplay}
+        </div>
+        <div className="split-divider">
+          <button className="view-toggle" onClick={toggleView}>
+            ⬍ Stack
+          </button>
+        </div>
+        <div className="split-right">
+          {terminalDisplay}
+        </div>
       </div>
-      <div className="split-right" style={{ width: rightWidth }}>
-        {right}
+    );
+  }
+
+  return (
+    <div className="stacked-container">
+      <div className="stacked-top">
+        {vncDisplay}
+      </div>
+      <div className="stacked-divider">
+        <button className="view-toggle" onClick={toggleView}>
+          ⬌ Split
+        </button>
+      </div>
+      <div className="stacked-bottom">
+        {terminalDisplay}
       </div>
     </div>
   );

@@ -157,14 +157,14 @@ function App() {
                   />
                 ) : desktop.type === 'novnc-split' ? (
                   <SplitDesktop
-                    left={
+                    vncDisplay={
                       <iframe
                         src={desktop.url}
                         title={`${desktop.name} VNC`}
                         className="vnc-frame"
                       />
                     }
-                    right={
+                    terminalDisplay={
                       <iframe
                         src={desktop.termUrl}
                         title={`${desktop.name} Terminal`}
@@ -174,15 +174,13 @@ function App() {
                   />
                 ) : desktop.type === 'guacamole' ? (
                   <SplitDesktop
-                    leftWidth="70%"
-                    rightWidth="30%"
-                    left={
+                    vncDisplay={
                       <GuacamoleDisplay
                         token={desktop.vncToken!}
                         className="guac-display"
                       />
                     }
-                    right={
+                    terminalDisplay={
                       <GuacamoleDisplay
                         token={desktop.sshToken!}
                         className="guac-display"
