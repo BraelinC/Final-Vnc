@@ -237,7 +237,14 @@ export function GuacamoleDisplay({ token, className }: Props) {
     container.addEventListener('paste', handlePaste);
 
     // Keyboard - block Ctrl+V from going to VNC (we handle it via paste event)
+    // Also capture Tab/Shift+Tab to prevent browser focus navigation
     const handleKeyDown = (e: KeyboardEvent) => {
+      // CRITICAL: Capture Tab and Shift+Tab to prevent browser focus change
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       // Allow Ctrl+C/X through to browser
       if ((e.ctrlKey || e.metaKey) && ['c', 'x'].includes(e.key.toLowerCase())) {
         return;
@@ -258,6 +265,16 @@ export function GuacamoleDisplay({ token, className }: Props) {
     };
     container.addEventListener('keydown', handleKeyDown);
     container.addEventListener('keyup', handleKeyUp);
+
+    // Document-level Tab capture to prevent focus leaving container
+    // This catches Tab/Shift+Tab before browser can change focus
+    const handleDocumentKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab' && document.activeElement === container) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    document.addEventListener('keydown', handleDocumentKeyDown, true); // capture phase
 
     // Guacamole keyboard - send all keys EXCEPT Ctrl+V to VNC
     let ctrlHeld = false;
@@ -301,6 +318,7 @@ export function GuacamoleDisplay({ token, className }: Props) {
       container.removeEventListener('paste', handlePaste);
       container.removeEventListener('keydown', handleKeyDown);
       container.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('keydown', handleDocumentKeyDown, true);
       keyboard.onkeydown = null;
       keyboard.onkeyup = null;
       keyboard.reset();
