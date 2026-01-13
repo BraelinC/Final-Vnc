@@ -18,9 +18,7 @@ export function GuacamoleDisplay({ token, className }: Props) {
       clientRef.current.disconnect();
     }
 
-    const tunnel = new Guacamole.WebSocketTunnel(
-      `wss://guac.braelin.uk/?token=${encodeURIComponent(token)}`
-    );
+    const tunnel = new Guacamole.WebSocketTunnel('wss://guac.braelin.uk/');
 
     const client = new Guacamole.Client(tunnel);
     clientRef.current = client;
@@ -235,7 +233,8 @@ export function GuacamoleDisplay({ token, className }: Props) {
     };
 
     // Request VNC at container size (server may ignore)
-    client.connect(`width=${containerWidth}&height=${containerHeight}`);
+    // Pass token via connect() instead of URL to avoid base64 corruption
+    client.connect(`token=${encodeURIComponent(token)}&width=${containerWidth}&height=${containerHeight}`);
 
     return () => {
       container.removeEventListener('mousedown', handleMouse);
