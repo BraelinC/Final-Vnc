@@ -180,7 +180,7 @@ export function GuacamoleDisplay({ token, className }: Props) {
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, false));
       }
 
-      // For SSH/tmux: enter copy mode and scroll with PageUp/PageDown
+      // For SSH/tmux: enter copy mode and scroll with arrow keys
       if (!inCopyMode) {
         // Send Ctrl+B [ to enter tmux copy mode
         client.sendKeyEvent(1, 65507); // Ctrl down
@@ -190,16 +190,16 @@ export function GuacamoleDisplay({ token, className }: Props) {
         client.sendKeyEvent(1, 91);    // '[' down
         client.sendKeyEvent(0, 91);    // '[' up
         inCopyMode = true;
-        console.log('Entered tmux copy mode');
       }
 
-      // Send Page Up or Page Down
-      if (e.deltaY < 0) {
-        client.sendKeyEvent(1, 65365); // Page_Up
-        client.sendKeyEvent(0, 65365);
-      } else {
-        client.sendKeyEvent(1, 65366); // Page_Down
-        client.sendKeyEvent(0, 65366);
+      // Calculate lines to scroll based on wheel delta (1-5 lines)
+      const lines = Math.min(5, Math.max(1, Math.ceil(Math.abs(e.deltaY) / 30)));
+      const keyCode = e.deltaY < 0 ? 65362 : 65364; // Up arrow : Down arrow
+
+      // Send arrow keys for smooth line-by-line scrolling
+      for (let i = 0; i < lines; i++) {
+        client.sendKeyEvent(1, keyCode);
+        client.sendKeyEvent(0, keyCode);
       }
 
       // Reset copy mode flag after 3 seconds of no scrolling
