@@ -156,9 +156,40 @@ export function GuacamoleDisplay({ token, className }: Props) {
       e.preventDefault();
     };
 
+    // Mouse wheel scrolling
+    const handleWheel = (e: WheelEvent) => {
+      if (!isConnected) return;
+
+      const rect = container.getBoundingClientRect();
+      const scale = scaleRef.current;
+      const x = Math.floor((e.clientX - rect.left) / scale);
+      const y = Math.floor((e.clientY - rect.top) / scale);
+
+      mouseState.x = x;
+      mouseState.y = y;
+
+      // Guacamole uses up/down booleans for scroll
+      if (e.deltaY < 0) {
+        // Scroll up
+        mouseState.up = true;
+        client.sendMouseState(mouseState);
+        mouseState.up = false;
+        client.sendMouseState(mouseState);
+      } else if (e.deltaY > 0) {
+        // Scroll down
+        mouseState.down = true;
+        client.sendMouseState(mouseState);
+        mouseState.down = false;
+        client.sendMouseState(mouseState);
+      }
+
+      e.preventDefault();
+    };
+
     container.addEventListener('mousedown', handleMouse);
     container.addEventListener('mouseup', handleMouse);
     container.addEventListener('mousemove', handleMouse);
+    container.addEventListener('wheel', handleWheel, { passive: false });
     container.addEventListener('contextmenu', (e) => e.preventDefault());
 
     // Make container focusable and focus on click
@@ -240,6 +271,7 @@ export function GuacamoleDisplay({ token, className }: Props) {
       container.removeEventListener('mousedown', handleMouse);
       container.removeEventListener('mouseup', handleMouse);
       container.removeEventListener('mousemove', handleMouse);
+      container.removeEventListener('wheel', handleWheel);
       container.removeEventListener('mousedown', focusOnClick);
       container.removeEventListener('paste', handlePaste);
       container.removeEventListener('keydown', handleKeyDown);
