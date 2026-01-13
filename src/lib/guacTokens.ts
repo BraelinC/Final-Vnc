@@ -13,6 +13,7 @@ interface GuacConnection {
       username?: string;
       command?: string;
       scrollback?: number;
+      'terminal-type'?: string;
     };
   };
 }
@@ -55,7 +56,8 @@ export const guacTokens = {
         username: 'claude',
         password: '11142006',
         command: 'tmux attach -t claude1 || tmux new -s claude1',
-        scrollback: 5000
+        scrollback: 5000,
+        'terminal-type': 'xterm-256color'
       }
     }
   }),
@@ -78,7 +80,8 @@ export const guacTokens = {
         username: 'claude2',
         password: '11142006',
         command: 'tmux attach -t claude2 || tmux new -s claude2',
-        scrollback: 5000
+        scrollback: 5000,
+        'terminal-type': 'xterm-256color'
       }
     }
   }),
@@ -101,7 +104,8 @@ export const guacTokens = {
         username: 'claude3',
         password: '11142006',
         command: 'tmux attach -t claude3 || tmux new -s claude3',
-        scrollback: 5000
+        scrollback: 5000,
+        'terminal-type': 'xterm-256color'
       }
     }
   }),
@@ -124,7 +128,8 @@ export const guacTokens = {
         username: 'claude4',
         password: '11142006',
         command: 'tmux attach -t claude4 || tmux new -s claude4',
-        scrollback: 5000
+        scrollback: 5000,
+        'terminal-type': 'xterm-256color'
       }
     }
   }),
@@ -147,7 +152,8 @@ export const guacTokens = {
         username: 'claude5',
         password: '11142006',
         command: 'tmux attach -t claude5 || tmux new -s claude5',
-        scrollback: 5000
+        scrollback: 5000,
+        'terminal-type': 'xterm-256color'
       }
     }
   }),
@@ -170,7 +176,8 @@ export const guacTokens = {
         username: 'claude6',
         password: '11142006',
         command: 'tmux attach -t claude6 || tmux new -s claude6',
-        scrollback: 5000
+        scrollback: 5000,
+        'terminal-type': 'xterm-256color'
       }
     }
   })

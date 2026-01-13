@@ -156,7 +156,7 @@ export function GuacamoleDisplay({ token, className }: Props) {
       e.preventDefault();
     };
 
-    // Mouse wheel scrolling - use both mouse scroll AND keyboard shortcuts
+    // Mouse wheel scrolling
     const handleWheel = (e: WheelEvent) => {
       if (!isConnected) {
         console.log('Wheel: not connected');
@@ -168,28 +168,18 @@ export function GuacamoleDisplay({ token, className }: Props) {
       const x = Math.floor((e.clientX - rect.left) / scale);
       const y = Math.floor((e.clientY - rect.top) / scale);
 
-      // Send mouse scroll events (works for VNC)
+      // Send mouse scroll events
       // Constructor: State(x, y, left, middle, right, up, down)
       if (e.deltaY < 0) {
-        // Scroll up - send mouse scroll AND Shift+PageUp for SSH terminal
+        // Scroll up
         console.log(`SCROLL UP at (${x}, ${y})`);
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, true, false));
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, false));
-        // Also send Shift+PageUp for SSH terminal scrollback
-        client.sendKeyEvent(1, 65505); // Shift down
-        client.sendKeyEvent(1, 65365); // Page_Up down
-        client.sendKeyEvent(0, 65365); // Page_Up up
-        client.sendKeyEvent(0, 65505); // Shift up
       } else if (e.deltaY > 0) {
-        // Scroll down - send mouse scroll AND Shift+PageDown for SSH terminal
+        // Scroll down
         console.log(`SCROLL DOWN at (${x}, ${y})`);
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, true));
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, false));
-        // Also send Shift+PageDown for SSH terminal scrollback
-        client.sendKeyEvent(1, 65505); // Shift down
-        client.sendKeyEvent(1, 65366); // Page_Down down
-        client.sendKeyEvent(0, 65366); // Page_Down up
-        client.sendKeyEvent(0, 65505); // Shift up
       }
 
       e.preventDefault();
