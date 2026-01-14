@@ -34,28 +34,13 @@ export function DesktopTile({ desktop, onClick, isLoaded }: Props) {
       </div>
       <div className="tile-content">
         {isLoaded && desktop.vncToken ? (
-          <div className="tile-displays">
-            <div className="tile-vnc">
-              <GuacamoleDisplay
-                token={desktop.vncToken}
-                className="tile-guac-display"
-                connectionId={`tile-vnc-${desktop.id}`}
-                connectionState={connectionStates[`tile-vnc-${desktop.id}`] || 'connecting'}
-                onConnectionStateChange={updateConnectionState}
-              />
-            </div>
-            {desktop.sshToken && (
-              <div className="tile-ssh">
-                <GuacamoleDisplay
-                  token={desktop.sshToken}
-                  className="tile-guac-display"
-                  connectionId={`tile-ssh-${desktop.id}`}
-                  connectionState={connectionStates[`tile-ssh-${desktop.id}`] || 'connecting'}
-                  onConnectionStateChange={updateConnectionState}
-                />
-              </div>
-            )}
-          </div>
+          <GuacamoleDisplay
+            token={desktop.vncToken}
+            className="tile-guac-display"
+            connectionId={`tile-vnc-${desktop.id}`}
+            connectionState={connectionStates[`tile-vnc-${desktop.id}`] || 'connecting'}
+            onConnectionStateChange={updateConnectionState}
+          />
         ) : (
           <div className="tile-loading">
             <div className="spinner"></div>

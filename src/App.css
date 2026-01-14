@@ -81,6 +81,20 @@
   background: #ff6b6b;
 }
 
+/* View Containers - keep both mounted, toggle visibility */
+.carousel-container,
+.grid-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.carousel-container.hidden,
+.grid-container.hidden {
+  display: none;
+}
+
 /* Navigation Arrows */
 .nav-arrow {
   position: fixed;

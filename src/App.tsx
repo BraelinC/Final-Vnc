@@ -162,63 +162,64 @@ function App() {
         )}
       </header>
 
-      {viewMode === 'carousel' ? (
-        <>
-          {/* Navigation Arrows */}
-          <button className="nav-arrow left" onClick={prev}>
-            ‹
-          </button>
-          <button className="nav-arrow right" onClick={next}>
-            ›
-          </button>
+      {/* Both views stay mounted - use CSS to show/hide to preserve connections */}
+      <div className={`carousel-container ${viewMode === 'carousel' ? 'active' : 'hidden'}`}>
+        {/* Navigation Arrows */}
+        <button className="nav-arrow left" onClick={prev}>
+          ‹
+        </button>
+        <button className="nav-arrow right" onClick={next}>
+          ›
+        </button>
 
-          {/* Carousel */}
-          <div className="carousel">
-            <div
-              className="carousel-track"
-              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-            >
-              {desktops.map((desktop, index) => (
-                <div key={desktop.id} className="slide">
-                  {(index === currentIndex || preloadAll) ? (
-                    <SplitDesktop
-                      vncDisplay={
-                        <GuacamoleDisplay
-                          token={desktop.vncToken!}
-                          className="guac-display"
-                          connectionId={`vnc-${desktop.id}`}
-                          connectionState={connectionStates[`vnc-${desktop.id}`] || 'connecting'}
-                          onConnectionStateChange={updateConnectionState}
-                        />
-                      }
-                      terminalDisplay={
-                        <GuacamoleDisplay
-                          token={desktop.sshToken!}
-                          className="guac-display"
-                          connectionId={`ssh-${desktop.id}`}
-                          connectionState={connectionStates[`ssh-${desktop.id}`] || 'connecting'}
-                          onConnectionStateChange={updateConnectionState}
-                        />
-                      }
-                    />
-                  ) : (
-                    <div className="loading-placeholder">
-                      <div className="spinner"></div>
-                      <p>Loading {desktop.name}...</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+        {/* Carousel */}
+        <div className="carousel">
+          <div
+            className="carousel-track"
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
+            {desktops.map((desktop, index) => (
+              <div key={desktop.id} className="slide">
+                {(index === currentIndex || preloadAll) ? (
+                  <SplitDesktop
+                    vncDisplay={
+                      <GuacamoleDisplay
+                        token={desktop.vncToken!}
+                        className="guac-display"
+                        connectionId={`vnc-${desktop.id}`}
+                        connectionState={connectionStates[`vnc-${desktop.id}`] || 'connecting'}
+                        onConnectionStateChange={updateConnectionState}
+                      />
+                    }
+                    terminalDisplay={
+                      <GuacamoleDisplay
+                        token={desktop.sshToken!}
+                        className="guac-display"
+                        connectionId={`ssh-${desktop.id}`}
+                        connectionState={connectionStates[`ssh-${desktop.id}`] || 'connecting'}
+                        onConnectionStateChange={updateConnectionState}
+                      />
+                    }
+                  />
+                ) : (
+                  <div className="loading-placeholder">
+                    <div className="spinner"></div>
+                    <p>Loading {desktop.name}...</p>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-        </>
-      ) : (
+        </div>
+      </div>
+
+      <div className={`grid-container ${viewMode === 'grid' ? 'active' : 'hidden'}`}>
         <AllScreensView
           desktops={desktops}
           onSelectDesktop={selectFromGrid}
           isLoaded={preloadAll}
         />
-      )}
+      </div>
 
     </div>
   )
