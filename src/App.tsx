@@ -288,7 +288,7 @@ function App() {
         <div className="carousel">
           <div
             className="carousel-track"
-            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            style={{ transform: `translateX(-${Math.max(0, currentIndex) * 100}%)` }}
           >
             {desktops.map((desktop, index) => (
               <div key={desktop.id} className="slide">

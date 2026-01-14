@@ -144,16 +144,21 @@
 .carousel-track {
   display: flex;
   height: 100%;
-  transition: transform 0.4s ease;
+  transition: transform 0.3s ease-out;
+  will-change: transform;
 }
 
 .slide {
   min-width: 100%;
+  width: 100%;
+  flex-shrink: 0;
   height: 100%;
   display: flex;
   align-items: stretch;
   justify-content: center;
   overflow: hidden;
+  /* Prevent partial slides from showing */
+  backface-visibility: hidden;
 }
 
 .slide > * {
