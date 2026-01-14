@@ -25,7 +25,7 @@ const initialDesktops: Desktop[] = [
   {
     id: 1,
     name: 'Desktop 1',
-    user: 'claude',
+    user: 'claude1',
     type: 'guacamole',
     vncToken: guacTokens.claude1Vnc,
     sshToken: guacTokens.claude1Ssh,
@@ -154,7 +154,7 @@ function App() {
 
         const data = await response.json()
         const apiDesktops: Desktop[] = data.users
-          .filter((u: any) => u.running && u.username !== 'claude') // Skip 'claude' (duplicate of claude1)
+          .filter((u: any) => u.running)
           .map((u: any) => createDesktopFromUser(u.username, u.displayNumber, u.vncPort))
           .sort((a: Desktop, b: Desktop) => a.id - b.id)
 
