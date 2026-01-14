@@ -1,0 +1,36 @@
+.all-screens-view {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #1a1a2e;
+}
+
+.screens-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+/* Responsive Grid */
+@media (max-width: 1200px) {
+  .screens-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .screens-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .all-screens-view {
+    padding: 12px;
+  }
+}
+
+/* Make tiles have consistent aspect ratio */
+.screens-grid > * {
+  aspect-ratio: 16 / 10;
+}

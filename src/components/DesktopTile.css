@@ -1,0 +1,133 @@
+.desktop-tile {
+  position: relative;
+  background: #16213e;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid transparent;
+}
+
+.desktop-tile:hover {
+  border-color: #e94560;
+  transform: scale(1.02);
+}
+
+.tile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #0f3460;
+}
+
+.tile-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.tile-user {
+  color: #888;
+  font-size: 0.8rem;
+}
+
+.tile-content {
+  flex: 1;
+  position: relative;
+  min-height: 150px;
+  background: #000;
+  overflow: hidden;
+}
+
+.tile-displays {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.tile-vnc {
+  flex: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.tile-ssh {
+  flex: 1;
+  overflow: hidden;
+  border-left: 1px solid #333;
+  pointer-events: none;
+}
+
+.tile-guac-display {
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.tile-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: #16213e;
+}
+
+.tile-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.desktop-tile:hover .tile-overlay {
+  opacity: 1;
+}
+
+.tile-overlay span {
+  background: #e94560;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Add Button Tile */
+.desktop-tile.add-tile {
+  border: 2px dashed #444;
+  background: transparent;
+  min-height: 200px;
+}
+
+.desktop-tile.add-tile:hover {
+  border-color: #e94560;
+  background: rgba(233, 69, 96, 0.1);
+}
+
+.add-tile-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: #666;
+}
+
+.add-tile-content .plus-icon {
+  font-size: 3rem;
+  color: #e94560;
+}
+
+.add-tile-content span {
+  font-size: 0.9rem;
+}
+
+.desktop-tile.add-tile:hover .add-tile-content {
+  color: #fff;
+}

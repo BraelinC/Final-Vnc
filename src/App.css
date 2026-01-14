@@ -59,6 +59,28 @@
   color: #aaa;
 }
 
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.view-toggle {
+  background: #e94560;
+  border: none;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.view-toggle:hover {
+  background: #ff6b6b;
+}
+
 /* Navigation Arrows */
 .nav-arrow {
   position: fixed;
