@@ -1,0 +1,14 @@
+[Unit]
+Description=VNC Provisioner API
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/vnc-provisioner
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
