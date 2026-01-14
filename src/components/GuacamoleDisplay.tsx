@@ -1,21 +1,34 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import Guacamole from 'guacamole-common-js';
+
+type ConnectionState = 'connecting' | 'connected' | 'error';
 
 interface Props {
   token: string;
   className?: string;
+  connectionId: string;
+  connectionState: ConnectionState;
+  onConnectionStateChange: (id: string, state: ConnectionState) => void;
 }
 
-export function GuacamoleDisplay({ token, className }: Props) {
+export function GuacamoleDisplay({ token, className, connectionId, connectionState, onConnectionStateChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Guacamole.Client | null>(null);
   const scaleRef = useRef<number>(1);
-  const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'error'>('connecting');
+  const hasConnectedRef = useRef(false);
+  // Store callback in ref to avoid dependency issues
+  const onStateChangeRef = useRef(onConnectionStateChange);
+  onStateChangeRef.current = onConnectionStateChange;
 
   const connect = useCallback(() => {
     if (!containerRef.current) return;
 
-    setConnectionState('connecting');
+    // Skip if already connected to avoid reconnection loops
+    if (hasConnectedRef.current && clientRef.current) {
+      return;
+    }
+
+    onStateChangeRef.current(connectionId, 'connecting');
 
     if (clientRef.current) {
       clientRef.current.disconnect();
@@ -66,12 +79,14 @@ export function GuacamoleDisplay({ token, className }: Props) {
     // Track connection state - only send events when connected (state 3)
     let isConnected = false;
     client.onstatechange = (state) => {
-      console.log('Guacamole state:', state);
+      console.log('Guacamole state:', state, 'for', connectionId);
       isConnected = (state === 3); // 3 = connected
       if (state === 3) {
-        setConnectionState('connected');
+        hasConnectedRef.current = true;
+        onStateChangeRef.current(connectionId, 'connected');
       } else if (state === 5) { // 5 = disconnected/error
-        setConnectionState('error');
+        hasConnectedRef.current = false;
+        onStateChangeRef.current(connectionId, 'error');
       }
     };
 
@@ -355,7 +370,7 @@ export function GuacamoleDisplay({ token, className }: Props) {
       keyboard.reset();
       client.disconnect();
     };
-  }, [token]);
+  }, [token, connectionId]);
 
   useEffect(() => {
     const cleanup = connect();

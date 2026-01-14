@@ -73,12 +73,20 @@ const desktops: Desktop[] = [
   }
 ]
 
+type ConnectionState = 'connecting' | 'connected' | 'error'
+
 function App() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [preloadAll, setPreloadAll] = useState(false)
   const [copied, setCopied] = useState(false)
+  // Track connection state at app level so it persists across tab switches
+  const [connectionStates, setConnectionStates] = useState<Record<string, ConnectionState>>({})
 
   const currentDesktop = desktops[currentIndex]
+
+  const updateConnectionState = useCallback((id: string, state: ConnectionState) => {
+    setConnectionStates(prev => ({ ...prev, [id]: state }))
+  }, [])
 
   // Pre-load all desktops after 2 seconds
   useEffect(() => {
@@ -156,12 +164,18 @@ function App() {
                     <GuacamoleDisplay
                       token={desktop.vncToken!}
                       className="guac-display"
+                      connectionId={`vnc-${desktop.id}`}
+                      connectionState={connectionStates[`vnc-${desktop.id}`] || 'connecting'}
+                      onConnectionStateChange={updateConnectionState}
                     />
                   }
                   terminalDisplay={
                     <GuacamoleDisplay
                       token={desktop.sshToken!}
                       className="guac-display"
+                      connectionId={`ssh-${desktop.id}`}
+                      connectionState={connectionStates[`ssh-${desktop.id}`] || 'connecting'}
+                      onConnectionStateChange={updateConnectionState}
                     />
                   }
                 />
