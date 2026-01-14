@@ -179,10 +179,8 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       e.preventDefault();
     };
 
-    // Mouse wheel scrolling - send tmux copy-mode commands for SSH terminal
-    let inCopyMode = false;
-    let copyModeTimeout: ReturnType<typeof setTimeout> | null = null;
-
+    // Mouse wheel scrolling - just send scroll events to VNC
+    // Don't auto-enter tmux copy mode - user can do Ctrl+B [ manually if needed
     const handleWheel = (e: WheelEvent) => {
       if (!isConnected) {
         return;
@@ -202,34 +200,6 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, true));
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, false));
       }
-
-      // For SSH/tmux: enter copy mode and scroll with arrow keys
-      if (!inCopyMode) {
-        // Send Ctrl+B [ to enter tmux copy mode
-        client.sendKeyEvent(1, 65507); // Ctrl down
-        client.sendKeyEvent(1, 98);    // 'b' down
-        client.sendKeyEvent(0, 98);    // 'b' up
-        client.sendKeyEvent(0, 65507); // Ctrl up
-        client.sendKeyEvent(1, 91);    // '[' down
-        client.sendKeyEvent(0, 91);    // '[' up
-        inCopyMode = true;
-      }
-
-      // Calculate lines to scroll based on wheel delta (1-5 lines)
-      const lines = Math.min(5, Math.max(1, Math.ceil(Math.abs(e.deltaY) / 30)));
-      const keyCode = e.deltaY < 0 ? 65362 : 65364; // Up arrow : Down arrow
-
-      // Send arrow keys for smooth line-by-line scrolling
-      for (let i = 0; i < lines; i++) {
-        client.sendKeyEvent(1, keyCode);
-        client.sendKeyEvent(0, keyCode);
-      }
-
-      // Reset copy mode flag after 3 seconds of no scrolling
-      if (copyModeTimeout) clearTimeout(copyModeTimeout);
-      copyModeTimeout = setTimeout(() => {
-        inCopyMode = false;
-      }, 3000);
 
       e.preventDefault();
     };
@@ -322,7 +292,8 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
     };
     document.addEventListener('keydown', handleDocumentKeyDown, true); // capture phase
 
-    // Guacamole keyboard - send all keys EXCEPT Ctrl+V to VNC
+    // Guacamole keyboard - send all keys EXCEPT Ctrl+V and Tab to VNC
+    // Tab/Shift+Tab are handled manually in handleKeyDown for better control
     let ctrlHeld = false;
     const keyboard = new Guacamole.Keyboard(container);
     keyboard.onkeydown = (keysym: number) => {
@@ -331,6 +302,11 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       // Block Ctrl+V - paste event handles it
       if (ctrlHeld && keysym === 118) {
         console.log('Blocking Ctrl+V - paste event will handle');
+        return true;
+      }
+      // Block Tab and ISO_Left_Tab - handleKeyDown handles these manually
+      if (keysym === 65289 || keysym === 65056) {
+        console.log('Blocking Tab in Guacamole keyboard - handleKeyDown will handle');
         return true;
       }
       // Only send if connected
@@ -344,6 +320,8 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       if (keysym === 65507 || keysym === 65508) ctrlHeld = false;
       // Block Ctrl+V release
       if (ctrlHeld && keysym === 118) return;
+      // Block Tab and ISO_Left_Tab release
+      if (keysym === 65289 || keysym === 65056) return;
       // Only send if connected
       if (isConnected) {
         console.log(`KEY UP: ${keysym}`);
