@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import Guacamole from 'guacamole-common-js';
 
 interface Props {
@@ -10,9 +10,12 @@ export function GuacamoleDisplay({ token, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Guacamole.Client | null>(null);
   const scaleRef = useRef<number>(1);
+  const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'error'>('connecting');
 
   const connect = useCallback(() => {
     if (!containerRef.current) return;
+
+    setConnectionState('connecting');
 
     if (clientRef.current) {
       clientRef.current.disconnect();
@@ -65,6 +68,11 @@ export function GuacamoleDisplay({ token, className }: Props) {
     client.onstatechange = (state) => {
       console.log('Guacamole state:', state);
       isConnected = (state === 3); // 3 = connected
+      if (state === 3) {
+        setConnectionState('connected');
+      } else if (state === 5) { // 5 = disconnected/error
+        setConnectionState('error');
+      }
     };
 
     // Clipboard: remote → local (when VNC clipboard changes, copy to browser)
@@ -371,6 +379,46 @@ export function GuacamoleDisplay({ token, className }: Props) {
         position: 'relative',
         background: '#000'
       }}
-    />
+    >
+      {/* Loading overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: '#16213e',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '20px',
+          zIndex: connectionState === 'connected' ? -1 : 10,
+          opacity: connectionState === 'connected' ? 0 : 1,
+          transition: 'opacity 0.3s ease-out',
+          pointerEvents: connectionState === 'connected' ? 'none' : 'auto'
+        }}
+      >
+        <div
+          style={{
+            width: '50px',
+            height: '50px',
+            border: '4px solid #333',
+            borderTopColor: '#e94560',
+            borderRadius: '50%',
+            animation: 'guac-spin 1s linear infinite'
+          }}
+        />
+        <p style={{ color: '#888', fontSize: '1.1rem' }}>
+          {connectionState === 'error' ? 'Connection failed' : 'Connecting...'}
+        </p>
+      </div>
+      <style>{`
+        @keyframes guac-spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
   );
 }
