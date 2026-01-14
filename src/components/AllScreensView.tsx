@@ -14,9 +14,10 @@ interface Props {
   onSelectDesktop: (index: number) => void
   onAddDesktop?: () => void
   isLoaded: boolean
+  isProvisioning?: boolean
 }
 
-export function AllScreensView({ desktops, onSelectDesktop, onAddDesktop, isLoaded }: Props) {
+export function AllScreensView({ desktops, onSelectDesktop, onAddDesktop, isLoaded, isProvisioning }: Props) {
   return (
     <div className="all-screens-view">
       <div className="screens-grid">
@@ -31,10 +32,22 @@ export function AllScreensView({ desktops, onSelectDesktop, onAddDesktop, isLoad
 
         {/* Add Desktop Button */}
         {onAddDesktop && (
-          <div className="desktop-tile add-tile" onClick={onAddDesktop}>
+          <div
+            className={`desktop-tile add-tile ${isProvisioning ? 'provisioning' : ''}`}
+            onClick={isProvisioning ? undefined : onAddDesktop}
+          >
             <div className="add-tile-content">
-              <span className="plus-icon">+</span>
-              <span>Add Desktop</span>
+              {isProvisioning ? (
+                <>
+                  <div className="spinner"></div>
+                  <span>Provisioning...</span>
+                </>
+              ) : (
+                <>
+                  <span className="plus-icon">+</span>
+                  <span>Add Desktop</span>
+                </>
+              )}
             </div>
           </div>
         )}

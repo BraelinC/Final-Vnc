@@ -3,7 +3,10 @@ import './App.css'
 import { SplitDesktop } from './components/SplitDesktop'
 import { GuacamoleDisplay } from './components/GuacamoleDisplay'
 import { AllScreensView } from './components/AllScreensView'
-import { guacTokens } from './lib/guacTokens'
+import { guacTokens, generateGuacToken } from './lib/guacTokens'
+
+// Provisioning API URL - uses guacamole proxy path
+const PROVISION_API = 'https://guac.braelin.uk/provision'
 
 interface Desktop {
   id: number
@@ -17,7 +20,8 @@ interface Desktop {
   sshCmd: string
 }
 
-const desktops: Desktop[] = [
+// Initial desktops (claude1-6)
+const initialDesktops: Desktop[] = [
   {
     id: 1,
     name: 'Desktop 1',
@@ -77,10 +81,12 @@ const desktops: Desktop[] = [
 type ConnectionState = 'connecting' | 'connected' | 'error'
 
 function App() {
+  const [desktops, setDesktops] = useState<Desktop[]>(initialDesktops)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [preloadAll, setPreloadAll] = useState(false)
   const [copied, setCopied] = useState(false)
   const [viewMode, setViewMode] = useState<'carousel' | 'grid'>('carousel')
+  const [provisioning, setProvisioning] = useState(false)
   // Track connection state at app level so it persists across tab switches
   const [connectionStates, setConnectionStates] = useState<Record<string, ConnectionState>>({})
 
@@ -103,12 +109,12 @@ function App() {
   const next = useCallback(() => {
     const newIndex = (currentIndex + 1) % desktops.length
     goTo(newIndex)
-  }, [currentIndex, goTo])
+  }, [currentIndex, desktops.length, goTo])
 
   const prev = useCallback(() => {
     const newIndex = (currentIndex - 1 + desktops.length) % desktops.length
     goTo(newIndex)
-  }, [currentIndex, goTo])
+  }, [currentIndex, desktops.length, goTo])
 
   const copySSH = useCallback(() => {
     navigator.clipboard.writeText(currentDesktop.sshCmd)
@@ -124,6 +130,73 @@ function App() {
   const toggleViewMode = useCallback(() => {
     setViewMode(v => v === 'carousel' ? 'grid' : 'carousel')
   }, [])
+
+  // Add a new desktop via provisioning API
+  const addDesktop = useCallback(async () => {
+    if (provisioning) return
+
+    setProvisioning(true)
+    try {
+      const response = await fetch(`${PROVISION_API}/api/provision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Provisioning failed')
+      }
+
+      const data = await response.json()
+      const { username, displayNumber, vncPort } = data.user
+
+      // Generate tokens for the new desktop
+      const vncToken = generateGuacToken({
+        connection: {
+          type: 'vnc',
+          settings: {
+            hostname: '127.0.0.1',
+            port: vncPort,
+            password: '11142006'
+          }
+        }
+      })
+
+      const sshToken = generateGuacToken({
+        connection: {
+          type: 'ssh',
+          settings: {
+            hostname: '127.0.0.1',
+            port: 22,
+            username: username,
+            password: '11142006',
+            command: `tmux attach -t ${username} || tmux new -s ${username}`,
+            scrollback: 5000,
+            'terminal-type': 'xterm-256color'
+          }
+        }
+      })
+
+      const newDesktop: Desktop = {
+        id: displayNumber,
+        name: `Desktop ${displayNumber}`,
+        user: username,
+        type: 'guacamole',
+        vncToken,
+        sshToken,
+        sshCmd: `ssh root@38.242.207.4 -t "su - ${username} -c tmux"`
+      }
+
+      setDesktops(prev => [...prev, newDesktop])
+      console.log(`Added new desktop: ${username}`)
+
+    } catch (error) {
+      console.error('Failed to provision desktop:', error)
+      alert(`Failed to add desktop: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setProvisioning(false)
+    }
+  }, [provisioning])
 
   // Keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -217,7 +290,9 @@ function App() {
         <AllScreensView
           desktops={desktops}
           onSelectDesktop={selectFromGrid}
+          onAddDesktop={addDesktop}
           isLoaded={preloadAll}
+          isProvisioning={provisioning}
         />
       </div>
 
