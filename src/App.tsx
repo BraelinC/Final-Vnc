@@ -80,6 +80,45 @@ const initialDesktops: Desktop[] = [
 
 type ConnectionState = 'connecting' | 'connected' | 'error'
 
+// Create desktop object from user info
+function createDesktopFromUser(username: string, displayNumber: number, vncPort: number): Desktop {
+  const vncToken = generateGuacToken({
+    connection: {
+      type: 'vnc',
+      settings: {
+        hostname: '127.0.0.1',
+        port: vncPort,
+        password: '11142006'
+      }
+    }
+  })
+
+  const sshToken = generateGuacToken({
+    connection: {
+      type: 'ssh',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 22,
+        username: username,
+        password: '11142006',
+        command: `tmux attach -t ${username} || tmux new -s ${username}`,
+        scrollback: 5000,
+        'terminal-type': 'xterm-256color'
+      }
+    }
+  })
+
+  return {
+    id: displayNumber,
+    name: `Desktop ${displayNumber}`,
+    user: username,
+    type: 'guacamole',
+    vncToken,
+    sshToken,
+    sshCmd: `ssh root@38.242.207.4 -t "su - ${username} -c tmux"`
+  }
+}
+
 function App() {
   const [desktops, setDesktops] = useState<Desktop[]>(initialDesktops)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -94,6 +133,30 @@ function App() {
 
   const updateConnectionState = useCallback((id: string, state: ConnectionState) => {
     setConnectionStates(prev => ({ ...prev, [id]: state }))
+  }, [])
+
+  // Fetch existing users from API on load
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const response = await fetch(`${PROVISION_API}/api/users`)
+        if (!response.ok) return
+
+        const data = await response.json()
+        const apiDesktops: Desktop[] = data.users
+          .filter((u: any) => u.running && u.username !== 'claude') // Skip 'claude' (duplicate of claude1)
+          .map((u: any) => createDesktopFromUser(u.username, u.displayNumber, u.vncPort))
+          .sort((a: Desktop, b: Desktop) => a.id - b.id)
+
+        if (apiDesktops.length > 0) {
+          setDesktops(apiDesktops)
+        }
+      } catch (error) {
+        console.error('Failed to fetch users:', error)
+        // Keep using initialDesktops on error
+      }
+    }
+    fetchUsers()
   }, [])
 
   // Pre-load all desktops after 2 seconds
@@ -150,43 +213,7 @@ function App() {
       const data = await response.json()
       const { username, displayNumber, vncPort } = data.user
 
-      // Generate tokens for the new desktop
-      const vncToken = generateGuacToken({
-        connection: {
-          type: 'vnc',
-          settings: {
-            hostname: '127.0.0.1',
-            port: vncPort,
-            password: '11142006'
-          }
-        }
-      })
-
-      const sshToken = generateGuacToken({
-        connection: {
-          type: 'ssh',
-          settings: {
-            hostname: '127.0.0.1',
-            port: 22,
-            username: username,
-            password: '11142006',
-            command: `tmux attach -t ${username} || tmux new -s ${username}`,
-            scrollback: 5000,
-            'terminal-type': 'xterm-256color'
-          }
-        }
-      })
-
-      const newDesktop: Desktop = {
-        id: displayNumber,
-        name: `Desktop ${displayNumber}`,
-        user: username,
-        type: 'guacamole',
-        vncToken,
-        sshToken,
-        sshCmd: `ssh root@38.242.207.4 -t "su - ${username} -c tmux"`
-      }
-
+      const newDesktop = createDesktopFromUser(username, displayNumber, vncPort)
       setDesktops(prev => [...prev, newDesktop])
       console.log(`Added new desktop: ${username}`)
 
