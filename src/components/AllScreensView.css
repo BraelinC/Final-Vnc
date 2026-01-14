@@ -1,8 +1,27 @@
 .all-screens-view {
   flex: 1;
   padding: 20px;
-  overflow-y: auto;
+  overflow-y: scroll;
   background: #1a1a2e;
+  height: 100%;
+}
+
+/* Custom scrollbar */
+.all-screens-view::-webkit-scrollbar {
+  width: 12px;
+}
+
+.all-screens-view::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+.all-screens-view::-webkit-scrollbar-thumb {
+  background: #e94560;
+  border-radius: 6px;
+}
+
+.all-screens-view::-webkit-scrollbar-thumb:hover {
+  background: #ff6b6b;
 }
 
 .screens-grid {

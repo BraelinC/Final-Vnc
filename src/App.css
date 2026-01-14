@@ -88,6 +88,12 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.grid-container {
+  overflow-y: auto;
 }
 
 .carousel-container.hidden,
