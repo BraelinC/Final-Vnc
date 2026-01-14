@@ -179,8 +179,10 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       e.preventDefault();
     };
 
-    // Mouse wheel scrolling - just send scroll events to VNC
-    // Don't auto-enter tmux copy mode - user can do Ctrl+B [ manually if needed
+    // Mouse wheel scrolling - enter tmux copy-mode and scroll
+    let inCopyMode = false;
+    let copyModeTimeout: ReturnType<typeof setTimeout> | null = null;
+
     const handleWheel = (e: WheelEvent) => {
       if (!isConnected) {
         return;
@@ -191,7 +193,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       const x = Math.floor((e.clientX - rect.left) / scale);
       const y = Math.floor((e.clientY - rect.top) / scale);
 
-      // Send mouse scroll events for VNC
+      // Send mouse scroll events for VNC desktop
       // Constructor: State(x, y, left, middle, right, up, down)
       if (e.deltaY < 0) {
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, true, false));
@@ -200,6 +202,34 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, true));
         client.sendMouseState(new Guacamole.Mouse.State(x, y, false, false, false, false, false));
       }
+
+      // For SSH/tmux: enter copy mode and scroll with arrow keys
+      if (!inCopyMode) {
+        // Send Ctrl+B [ to enter tmux copy mode
+        client.sendKeyEvent(1, 65507); // Ctrl down
+        client.sendKeyEvent(1, 98);    // 'b' down
+        client.sendKeyEvent(0, 98);    // 'b' up
+        client.sendKeyEvent(0, 65507); // Ctrl up
+        client.sendKeyEvent(1, 91);    // '[' down
+        client.sendKeyEvent(0, 91);    // '[' up
+        inCopyMode = true;
+      }
+
+      // Calculate lines to scroll based on wheel delta (1-5 lines)
+      const lines = Math.min(5, Math.max(1, Math.ceil(Math.abs(e.deltaY) / 30)));
+      const keyCode = e.deltaY < 0 ? 65362 : 65364; // Up arrow : Down arrow
+
+      // Send arrow keys for smooth line-by-line scrolling
+      for (let i = 0; i < lines; i++) {
+        client.sendKeyEvent(1, keyCode);
+        client.sendKeyEvent(0, keyCode);
+      }
+
+      // Reset copy mode flag after 3 seconds of no scrolling
+      if (copyModeTimeout) clearTimeout(copyModeTimeout);
+      copyModeTimeout = setTimeout(() => {
+        inCopyMode = false;
+      }, 3000);
 
       e.preventDefault();
     };
