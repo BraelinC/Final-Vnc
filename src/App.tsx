@@ -5,8 +5,8 @@ import { GuacamoleDisplay } from './components/GuacamoleDisplay'
 import { AllScreensView } from './components/AllScreensView'
 import { guacTokens, generateGuacToken } from './lib/guacTokens'
 
-// Provisioning API URL - uses guacamole proxy path
-const PROVISION_API = 'https://guac.braelin.uk/provision'
+// Provisioning API URL
+const PROVISION_API = 'https://provision.braelin.uk'
 
 interface Desktop {
   id: number
