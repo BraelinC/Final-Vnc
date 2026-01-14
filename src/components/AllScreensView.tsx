@@ -11,7 +11,7 @@ interface Desktop {
 
 interface Props {
   desktops: Desktop[]
-  onSelectDesktop: (index: number) => void
+  onSelectDesktop: (desktopId: number) => void
   onAddDesktop?: () => void
   isLoaded: boolean
   isProvisioning?: boolean
@@ -21,11 +21,11 @@ export function AllScreensView({ desktops, onSelectDesktop, onAddDesktop, isLoad
   return (
     <div className="all-screens-view">
       <div className="screens-grid">
-        {desktops.map((desktop, index) => (
+        {desktops.map((desktop) => (
           <DesktopTile
             key={desktop.id}
             desktop={desktop}
-            onClick={() => onSelectDesktop(index)}
+            onClick={() => onSelectDesktop(desktop.id)}
             isLoaded={isLoaded}
           />
         ))}

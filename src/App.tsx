@@ -121,7 +121,8 @@ function createDesktopFromUser(username: string, displayNumber: number, vncPort:
 
 function App() {
   const [desktops, setDesktops] = useState<Desktop[]>(initialDesktops)
-  const [currentIndex, setCurrentIndex] = useState(0)
+  // Use desktop ID instead of index for stable navigation
+  const [currentDesktopId, setCurrentDesktopId] = useState<number>(1)
   const [preloadAll, setPreloadAll] = useState(false)
   const [copied, setCopied] = useState(false)
   const [viewMode, setViewMode] = useState<'carousel' | 'grid'>('carousel')
@@ -129,7 +130,16 @@ function App() {
   // Track connection state at app level so it persists across tab switches
   const [connectionStates, setConnectionStates] = useState<Record<string, ConnectionState>>({})
 
-  const currentDesktop = desktops[currentIndex]
+  // Find current desktop and index by ID
+  const currentIndex = desktops.findIndex(d => d.id === currentDesktopId)
+  const currentDesktop = desktops[currentIndex] || desktops[0]
+
+  // If current ID not found (e.g., after reload), reset to first desktop
+  useEffect(() => {
+    if (currentIndex === -1 && desktops.length > 0) {
+      setCurrentDesktopId(desktops[0].id)
+    }
+  }, [currentIndex, desktops])
 
   const updateConnectionState = useCallback((id: string, state: ConnectionState) => {
     setConnectionStates(prev => ({ ...prev, [id]: state }))
@@ -165,19 +175,20 @@ function App() {
     return () => clearTimeout(timer)
   }, [])
 
-  const goTo = useCallback((index: number) => {
-    setCurrentIndex(index)
+  // Navigate by desktop ID (stable) not index
+  const goToId = useCallback((id: number) => {
+    setCurrentDesktopId(id)
   }, [])
 
   const next = useCallback(() => {
-    const newIndex = (currentIndex + 1) % desktops.length
-    goTo(newIndex)
-  }, [currentIndex, desktops.length, goTo])
+    const nextIndex = (currentIndex + 1) % desktops.length
+    setCurrentDesktopId(desktops[nextIndex].id)
+  }, [currentIndex, desktops])
 
   const prev = useCallback(() => {
-    const newIndex = (currentIndex - 1 + desktops.length) % desktops.length
-    goTo(newIndex)
-  }, [currentIndex, desktops.length, goTo])
+    const prevIndex = (currentIndex - 1 + desktops.length) % desktops.length
+    setCurrentDesktopId(desktops[prevIndex].id)
+  }, [currentIndex, desktops])
 
   const copySSH = useCallback(() => {
     navigator.clipboard.writeText(currentDesktop.sshCmd)
@@ -185,8 +196,8 @@ function App() {
     setTimeout(() => setCopied(false), 2000)
   }, [currentDesktop.sshCmd])
 
-  const selectFromGrid = useCallback((index: number) => {
-    setCurrentIndex(index)
+  const selectFromGrid = useCallback((desktopId: number) => {
+    setCurrentDesktopId(desktopId)
     setViewMode('carousel')
   }, [])
 
@@ -239,11 +250,12 @@ function App() {
         <div className="header-center">
           {viewMode === 'carousel' && (
             <div className="dots">
-              {desktops.map((_, index) => (
+              {desktops.map((desktop) => (
                 <button
-                  key={index}
-                  className={`dot ${index === currentIndex ? 'active' : ''}`}
-                  onClick={() => goTo(index)}
+                  key={desktop.id}
+                  className={`dot ${desktop.id === currentDesktopId ? 'active' : ''}`}
+                  onClick={() => goToId(desktop.id)}
+                  title={desktop.name}
                 />
               ))}
             </div>
