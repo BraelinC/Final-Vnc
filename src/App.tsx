@@ -300,6 +300,7 @@ function App() {
                         onConnectionStateChange={updateConnectionState}
                       />
                     }
+                    sshCmd={desktop.sshCmd}
                   />
                 ) : (
                   <div className="loading-placeholder">

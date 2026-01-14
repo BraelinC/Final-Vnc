@@ -266,23 +266,57 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .header {
+    padding: 8px 12px;
+  }
+
   .header h1 {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .nav-arrow {
-    width: 40px;
-    height: 60px;
-    font-size: 2rem;
+    width: 36px;
+    height: 50px;
+    font-size: 1.8rem;
   }
 
-  .ssh-cmd {
-    max-width: 200px;
-    font-size: 0.7rem;
+  .nav-arrow.left {
+    left: 0;
+  }
+
+  .nav-arrow.right {
+    right: 0;
+  }
+
+  /* Hide SSH section in header on mobile - it's in the SplitDesktop now */
+  .ssh-section {
+    display: none;
+  }
+
+  .header-center {
+    gap: 8px;
+  }
+
+  .dots {
+    gap: 6px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .view-toggle {
+    padding: 6px 10px;
+    font-size: 0.75rem;
   }
 
   .footer {
-    flex-direction: column;
-    gap: 8px;
+    display: none;
+  }
+
+  /* Grid view on mobile */
+  .grid-container {
+    padding: 8px;
   }
 }
