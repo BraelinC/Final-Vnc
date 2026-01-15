@@ -177,11 +177,32 @@
   display: flex;
   overflow: hidden;
   background: #000;
+  position: relative;
+  touch-action: none;
 }
 
-.mobile-terminal > * {
+.mobile-terminal-content {
   width: 100%;
   height: 100%;
+  transition: transform 0.05s ease-out;
+}
+
+.mobile-terminal-content > * {
+  width: 100%;
+  height: 100%;
+}
+
+.zoom-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(233, 69, 96, 0.8);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  pointer-events: none;
 }
 
 /* Landscape mode: hide terminal, VNC fills screen */
