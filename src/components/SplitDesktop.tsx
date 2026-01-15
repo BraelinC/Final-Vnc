@@ -44,12 +44,16 @@ export function SplitDesktop({ vncDisplay, terminalDisplay, sshCmd }: Props) {
     }
   };
 
-  // Mobile view - just VNC + SSH command
+  // Mobile view - VNC on top, terminal on bottom (portrait)
+  // In landscape, terminal hides and VNC fills screen
   if (isMobile) {
     return (
       <div className="mobile-container">
         <div className="mobile-vnc">
           {vncDisplay}
+        </div>
+        <div className="mobile-terminal">
+          {terminalDisplay}
         </div>
         {sshCmd && (
           <div className="mobile-ssh-bar" onClick={copySSH}>
