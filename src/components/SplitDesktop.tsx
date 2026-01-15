@@ -8,11 +8,13 @@ interface Props {
 }
 
 // Check mobile on initial load (SSR safe)
+// If device has touch capability, always use mobile view (even in landscape)
 const getIsMobile = () => {
   if (typeof window === 'undefined') return false;
-  // Samsung S21 Ultra: 412px width, also check touch capability
-  return window.innerWidth <= 500 ||
-         (window.innerWidth <= 768 && 'ontouchstart' in window);
+  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  // Touch device = always mobile view (phone/tablet)
+  // Non-touch = only mobile if very narrow (small browser window)
+  return hasTouch || window.innerWidth <= 500;
 };
 
 export function SplitDesktop({ vncDisplay, terminalDisplay, sshCmd }: Props) {
