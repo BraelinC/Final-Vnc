@@ -29,7 +29,7 @@ const initialDesktops: Desktop[] = [
     type: 'guacamole',
     vncToken: guacTokens.claude1Vnc,
     sshToken: guacTokens.claude1Ssh,
-    sshCmd: 'ssh root@38.242.207.4 -t "su - claude -c tmux"'
+    sshCmd: `ssh root@38.242.207.4 -t "su - claude -c 'tmux a -t claude || tmux new -s claude'"`
   },
   {
     id: 2,
@@ -38,7 +38,7 @@ const initialDesktops: Desktop[] = [
     type: 'guacamole',
     vncToken: guacTokens.claude2Vnc,
     sshToken: guacTokens.claude2Ssh,
-    sshCmd: 'ssh root@38.242.207.4 -t "su - claude2 -c tmux"'
+    sshCmd: `ssh root@38.242.207.4 -t "su - claude2 -c 'tmux a -t claude2 || tmux new -s claude2'"`
   },
   {
     id: 3,
@@ -47,7 +47,7 @@ const initialDesktops: Desktop[] = [
     type: 'guacamole',
     vncToken: guacTokens.claude3Vnc,
     sshToken: guacTokens.claude3Ssh,
-    sshCmd: 'ssh root@38.242.207.4 -t "su - claude3 -c tmux"'
+    sshCmd: `ssh root@38.242.207.4 -t "su - claude3 -c 'tmux a -t claude3 || tmux new -s claude3'"`
   },
   {
     id: 4,
@@ -56,7 +56,7 @@ const initialDesktops: Desktop[] = [
     type: 'guacamole',
     vncToken: guacTokens.claude4Vnc,
     sshToken: guacTokens.claude4Ssh,
-    sshCmd: 'ssh root@38.242.207.4 -t "su - claude4 -c tmux"'
+    sshCmd: `ssh root@38.242.207.4 -t "su - claude4 -c 'tmux a -t claude4 || tmux new -s claude4'"`
   },
   {
     id: 5,
@@ -65,7 +65,7 @@ const initialDesktops: Desktop[] = [
     type: 'guacamole',
     vncToken: guacTokens.claude5Vnc,
     sshToken: guacTokens.claude5Ssh,
-    sshCmd: 'ssh root@38.242.207.4 -t "su - claude5 -c tmux"'
+    sshCmd: `ssh root@38.242.207.4 -t "su - claude5 -c 'tmux a -t claude5 || tmux new -s claude5'"`
   },
   {
     id: 6,
@@ -74,7 +74,7 @@ const initialDesktops: Desktop[] = [
     type: 'guacamole',
     vncToken: guacTokens.claude6Vnc,
     sshToken: guacTokens.claude6Ssh,
-    sshCmd: 'ssh root@38.242.207.4 -t "su - claude6 -c tmux"'
+    sshCmd: `ssh root@38.242.207.4 -t "su - claude6 -c 'tmux a -t claude6 || tmux new -s claude6'"`
   }
 ]
 
@@ -115,7 +115,7 @@ function createDesktopFromUser(username: string, displayNumber: number, vncPort:
     type: 'guacamole',
     vncToken,
     sshToken,
-    sshCmd: `ssh root@38.242.207.4 -t "su - ${username} -c tmux"`
+    sshCmd: `ssh root@38.242.207.4 -t "su - ${username} -c 'tmux a -t ${username} || tmux new -s ${username}'"`
   }
 }
 
