@@ -269,8 +269,36 @@
   font-size: 0.8rem;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Responsive - Touch devices */
+@media (pointer: coarse), (max-width: 500px) {
+  /* Hide entire header on mobile */
+  .header {
+    display: none;
+  }
+
+  .nav-arrow {
+    width: 30px;
+    height: 40px;
+    font-size: 1.5rem;
+    opacity: 0.6;
+  }
+
+  .footer {
+    display: none;
+  }
+
+  /* Grid view on mobile */
+  .grid-container {
+    padding: 4px;
+  }
+
+  .carousel-container {
+    height: 100vh;
+  }
+}
+
+/* Small screens without touch (narrow browser) */
+@media (max-width: 768px) and (pointer: fine) {
   .header {
     padding: 8px 12px;
   }
@@ -285,15 +313,6 @@
     font-size: 1.8rem;
   }
 
-  .nav-arrow.left {
-    left: 0;
-  }
-
-  .nav-arrow.right {
-    right: 0;
-  }
-
-  /* Hide SSH section in header on mobile - it's in the SplitDesktop now */
   .ssh-section {
     display: none;
   }
@@ -318,10 +337,5 @@
 
   .footer {
     display: none;
-  }
-
-  /* Grid view on mobile */
-  .grid-container {
-    padding: 8px;
   }
 }
