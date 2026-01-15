@@ -5,6 +5,7 @@ interface Props {
   vncDisplay: React.ReactNode;
   terminalDisplay: React.ReactNode;
   sshCmd?: string;
+  ttydUrl?: string;  // ttyd URL for mobile iframe
 }
 
 // Pinch-to-zoom hook for terminal
@@ -111,7 +112,7 @@ const getIsMobile = () => {
   return hasTouch || window.innerWidth <= 500;
 };
 
-export function SplitDesktop({ vncDisplay, terminalDisplay, sshCmd }: Props) {
+export function SplitDesktop({ vncDisplay, terminalDisplay, sshCmd, ttydUrl }: Props) {
   const [viewMode, setViewMode] = useState<'stacked' | 'split'>('split');
   const [isMobile, setIsMobile] = useState(getIsMobile);
   const [copied, setCopied] = useState(false);
@@ -139,7 +140,7 @@ export function SplitDesktop({ vncDisplay, terminalDisplay, sshCmd }: Props) {
     }
   };
 
-  // Mobile view - VNC on top, terminal on bottom (portrait)
+  // Mobile view - VNC on top, ttyd iframe terminal on bottom (portrait)
   // In landscape, terminal hides and VNC fills screen
   if (isMobile) {
     return (
@@ -147,18 +148,29 @@ export function SplitDesktop({ vncDisplay, terminalDisplay, sshCmd }: Props) {
         <div className="mobile-vnc">
           {vncDisplay}
         </div>
-        <div className="mobile-terminal" ref={terminalRef}>
-          <div
-            className="mobile-terminal-content"
-            style={{
-              transform: `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`,
-              transformOrigin: 'center center'
-            }}
-          >
-            {terminalDisplay}
-          </div>
-          {scale !== 1 && (
-            <div className="zoom-indicator">{Math.round(scale * 100)}%</div>
+        <div className="mobile-terminal">
+          {ttydUrl ? (
+            <iframe
+              src={ttydUrl}
+              className="ttyd-iframe"
+              title="Terminal"
+              allow="clipboard-read; clipboard-write"
+            />
+          ) : (
+            <div ref={terminalRef}>
+              <div
+                className="mobile-terminal-content"
+                style={{
+                  transform: `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`,
+                  transformOrigin: 'center center'
+                }}
+              >
+                {terminalDisplay}
+              </div>
+              {scale !== 1 && (
+                <div className="zoom-indicator">{Math.round(scale * 100)}%</div>
+              )}
+            </div>
           )}
         </div>
         {sshCmd && (
