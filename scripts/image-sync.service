@@ -1,0 +1,13 @@
+[Unit]
+Description=Sync pasted images from Convex to local folder
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=%i
+ExecStart=/home/%i/ai-images-sync.sh
+Environment="HOME=/home/%i"
+
+[Install]
+WantedBy=multi-user.target

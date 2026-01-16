@@ -3,6 +3,7 @@ import './App.css'
 import { SplitDesktop } from './components/SplitDesktop'
 import { GuacamoleDisplay } from './components/GuacamoleDisplay'
 import { AllScreensView } from './components/AllScreensView'
+import { ImagePaste } from './components/ImagePaste'
 import { guacTokens, generateGuacToken } from './lib/guacTokens'
 
 // Provisioning API URL
@@ -344,6 +345,12 @@ function App() {
           isProvisioning={provisioning}
         />
       </div>
+
+      {/* Image paste panel - shows for current VNC session */}
+      <ImagePaste
+        vncSession={currentDesktop.user}
+        isVisible={viewMode === 'carousel'}
+      />
 
     </div>
   )
