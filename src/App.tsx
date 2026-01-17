@@ -7,7 +7,7 @@ import { ImagePaste } from './components/ImagePaste'
 import { guacTokens, generateGuacToken } from './lib/guacTokens'
 
 // Provisioning API URL
-const PROVISION_API = 'http://38.242.207.4:3001'
+const PROVISION_API = 'https://provision.braelin.uk'
 
 interface Desktop {
   id: number
