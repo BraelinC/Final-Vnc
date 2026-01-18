@@ -53,7 +53,10 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
     displayElement.style.top = '0';
     container.appendChild(displayElement);
 
-    // Scale to fit container
+    // Scale to fit container - for SSH/terminals, scale to fit WIDTH so text is readable
+    // Check if this is an SSH connection (terminal) based on connectionId
+    const isTerminal = connectionId.startsWith('ssh-');
+
     display.onresize = () => {
       const displayWidth = display.getWidth();
       const displayHeight = display.getHeight();
@@ -61,14 +64,30 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       const containerHeight = container.offsetHeight;
 
       if (displayWidth && displayHeight) {
-        const scale = Math.min(
-          containerWidth / displayWidth,
-          containerHeight / displayHeight,
-          1
-        );
+        let scale: number;
+
+        if (isTerminal) {
+          // For terminals: scale to fit WIDTH so text is readable
+          // Allow scaling up beyond 1 for small screens
+          scale = containerWidth / displayWidth;
+          // Also ensure it fits height, but prioritize readable text
+          const heightScale = containerHeight / displayHeight;
+          // If height would be too cramped, use height scale instead
+          if (heightScale < scale * 0.5) {
+            scale = heightScale;
+          }
+        } else {
+          // For VNC desktop: fit within container, capped at 1
+          scale = Math.min(
+            containerWidth / displayWidth,
+            containerHeight / displayHeight,
+            1
+          );
+        }
+
         scaleRef.current = scale;
         display.scale(scale);
-        console.log(`Display scaled to ${scale.toFixed(3)} (${displayWidth}x${displayHeight} -> container ${containerWidth}x${containerHeight})`);
+        console.log(`Display scaled to ${scale.toFixed(3)} (${displayWidth}x${displayHeight} -> container ${containerWidth}x${containerHeight}) isTerminal=${isTerminal}`);
       }
     };
 
