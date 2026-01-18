@@ -140,39 +140,38 @@ export function SplitDesktop({ vncDisplay, terminalDisplay, sshCmd, ttydUrl }: P
     }
   };
 
-  // Mobile view - VNC on top, ttyd iframe terminal on bottom (portrait)
-  // In landscape, terminal hides and VNC fills screen
+  // Mobile view - VNC on top, terminal on bottom (portrait)
+  // Uses Guacamole SSH terminal which scales to fit
   if (isMobile) {
     return (
       <div className="mobile-container">
         <div className="mobile-vnc">
           {vncDisplay}
         </div>
-        <div className="mobile-terminal">
-          {ttydUrl ? (
-            <iframe
-              src={ttydUrl}
-              className="ttyd-iframe"
-              title="Terminal"
-              allow="clipboard-read; clipboard-write"
-            />
-          ) : (
-            <div ref={terminalRef}>
-              <div
-                className="mobile-terminal-content"
-                style={{
-                  transform: `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`,
-                  transformOrigin: 'center center'
-                }}
-              >
-                {terminalDisplay}
-              </div>
-              {scale !== 1 && (
-                <div className="zoom-indicator">{Math.round(scale * 100)}%</div>
-              )}
-            </div>
+        <div className="mobile-terminal" ref={terminalRef}>
+          <div
+            className="mobile-terminal-content"
+            style={{
+              transform: scale !== 1 ? `scale(${scale}) translate(${translate.x}px, ${translate.y}px)` : undefined,
+              transformOrigin: 'top left'
+            }}
+          >
+            {terminalDisplay}
+          </div>
+          {scale !== 1 && (
+            <div className="zoom-indicator">{Math.round(scale * 100)}%</div>
           )}
         </div>
+        {ttydUrl && (
+          <a
+            href={ttydUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mobile-terminal-link"
+          >
+            Open Terminal Fullscreen
+          </a>
+        )}
         {sshCmd && (
           <div className="mobile-ssh-bar" onClick={copySSH}>
             <span className="mobile-ssh-label">SSH:</span>
