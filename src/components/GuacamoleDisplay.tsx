@@ -9,9 +9,10 @@ interface Props {
   connectionId: string;
   connectionState: ConnectionState;
   onConnectionStateChange: (id: string, state: ConnectionState) => void;
+  wsUrl?: string;  // Optional custom WebSocket URL (default: wss://guac.braelin.uk/)
 }
 
-export function GuacamoleDisplay({ token, className, connectionId, connectionState, onConnectionStateChange }: Props) {
+export function GuacamoleDisplay({ token, className, connectionId, connectionState, onConnectionStateChange, wsUrl = 'wss://guac.braelin.uk/' }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<Guacamole.Client | null>(null);
   const scaleRef = useRef<number>(1);
@@ -34,7 +35,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       clientRef.current.disconnect();
     }
 
-    const tunnel = new Guacamole.WebSocketTunnel('wss://guac.braelin.uk/');
+    const tunnel = new Guacamole.WebSocketTunnel(wsUrl);
 
     const client = new Guacamole.Client(tunnel);
     clientRef.current = client;
@@ -397,7 +398,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       keyboard.reset();
       client.disconnect();
     };
-  }, [token, connectionId]);
+  }, [token, connectionId, wsUrl]);
 
   useEffect(() => {
     const cleanup = connect();

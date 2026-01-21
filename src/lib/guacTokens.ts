@@ -180,5 +180,15 @@ export const guacTokens = {
         'terminal-type': 'xterm-256color'
       }
     }
+  }),
+  // macOS Sonoma VM (local QEMU)
+  macosVnc: generateGuacToken({
+    connection: {
+      type: 'vnc',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 5900
+      }
+    }
   })
 };

@@ -20,6 +20,7 @@ interface Desktop {
   sshToken?: string
   sshCmd: string
   ttydUrl: string  // ttyd terminal URL for mobile
+  wsUrl?: string   // Optional custom WebSocket URL for local guacamole-lite
 }
 
 // Initial desktops (claude1-6)
@@ -83,6 +84,16 @@ const initialDesktops: Desktop[] = [
     sshToken: guacTokens.claude6Ssh,
     sshCmd: `ssh root@38.242.207.4 -t "su - claude6 -c 'tmux a -t claude6 || tmux new -s claude6'"`,
     ttydUrl: 'https://term6.braelin.uk'
+  },
+  {
+    id: 7,
+    name: 'macOS Sonoma',
+    user: 'macos',
+    type: 'guacamole',
+    vncToken: guacTokens.macosVnc,
+    sshCmd: 'N/A (use VNC)',
+    ttydUrl: '',
+    wsUrl: 'ws://localhost:8080/'  // Local guacamole-lite
   }
 ]
 
@@ -310,16 +321,24 @@ function App() {
                         connectionId={`vnc-${desktop.id}`}
                         connectionState={connectionStates[`vnc-${desktop.id}`] || 'connecting'}
                         onConnectionStateChange={updateConnectionState}
+                        wsUrl={desktop.wsUrl}
                       />
                     }
                     terminalDisplay={
-                      <GuacamoleDisplay
-                        token={desktop.sshToken!}
-                        className="guac-display"
-                        connectionId={`ssh-${desktop.id}`}
-                        connectionState={connectionStates[`ssh-${desktop.id}`] || 'connecting'}
-                        onConnectionStateChange={updateConnectionState}
-                      />
+                      desktop.sshToken ? (
+                        <GuacamoleDisplay
+                          token={desktop.sshToken}
+                          className="guac-display"
+                          connectionId={`ssh-${desktop.id}`}
+                          connectionState={connectionStates[`ssh-${desktop.id}`] || 'connecting'}
+                          onConnectionStateChange={updateConnectionState}
+                          wsUrl={desktop.wsUrl}
+                        />
+                      ) : (
+                        <div className="no-terminal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888', background: '#1a1a2e' }}>
+                          <p>No terminal available for {desktop.name}</p>
+                        </div>
+                      )
                     }
                     sshCmd={desktop.sshCmd}
                     ttydUrl={desktop.ttydUrl}
