@@ -23,80 +23,21 @@ interface Desktop {
   wsUrl?: string   // Optional custom WebSocket URL for local guacamole-lite
 }
 
-// Initial desktops (claude1-6)
-const initialDesktops: Desktop[] = [
-  {
-    id: 1,
-    name: 'Desktop 1',
-    user: 'claude1',
-    type: 'guacamole',
-    vncToken: guacTokens.claude1Vnc,
-    sshToken: guacTokens.claude1Ssh,
-    sshCmd: `ssh root@38.242.207.4 -t "su - claude -c 'tmux a -t claude || tmux new -s claude'"`,
-    ttydUrl: 'https://term1.braelin.uk'
-  },
-  {
-    id: 2,
-    name: 'Desktop 2',
-    user: 'claude2',
-    type: 'guacamole',
-    vncToken: guacTokens.claude2Vnc,
-    sshToken: guacTokens.claude2Ssh,
-    sshCmd: `ssh root@38.242.207.4 -t "su - claude2 -c 'tmux a -t claude2 || tmux new -s claude2'"`,
-    ttydUrl: 'https://term2.braelin.uk'
-  },
-  {
-    id: 3,
-    name: 'Desktop 3',
-    user: 'claude3',
-    type: 'guacamole',
-    vncToken: guacTokens.claude3Vnc,
-    sshToken: guacTokens.claude3Ssh,
-    sshCmd: `ssh root@38.242.207.4 -t "su - claude3 -c 'tmux a -t claude3 || tmux new -s claude3'"`,
-    ttydUrl: 'https://term3.braelin.uk'
-  },
-  {
-    id: 4,
-    name: 'Desktop 4',
-    user: 'claude4',
-    type: 'guacamole',
-    vncToken: guacTokens.claude4Vnc,
-    sshToken: guacTokens.claude4Ssh,
-    sshCmd: `ssh root@38.242.207.4 -t "su - claude4 -c 'tmux a -t claude4 || tmux new -s claude4'"`,
-    ttydUrl: 'https://term4.braelin.uk'
-  },
-  {
-    id: 5,
-    name: 'Desktop 5',
-    user: 'claude5',
-    type: 'guacamole',
-    vncToken: guacTokens.claude5Vnc,
-    sshToken: guacTokens.claude5Ssh,
-    sshCmd: `ssh root@38.242.207.4 -t "su - claude5 -c 'tmux a -t claude5 || tmux new -s claude5'"`,
-    ttydUrl: 'https://term5.braelin.uk'
-  },
-  {
-    id: 6,
-    name: 'Desktop 6',
-    user: 'claude6',
-    type: 'guacamole',
-    vncToken: guacTokens.claude6Vnc,
-    sshToken: guacTokens.claude6Ssh,
-    sshCmd: `ssh root@38.242.207.4 -t "su - claude6 -c 'tmux a -t claude6 || tmux new -s claude6'"`,
-    ttydUrl: 'https://term6.braelin.uk'
-  },
-  {
-    id: 7,
-    name: 'macOS Sonoma',
-    user: 'macos',
-    type: 'guacamole',
-    vncToken: guacTokens.macosVnc,
-    sshToken: guacTokens.macosSsh,
-    sshCmd: 'ssh techrechard.com@macos.braelin.uk',
-    ttydUrl: '',
-    wsUrl: 'wss://macos-guac.braelin.uk/'  // Local guacamole-lite via Cloudflare tunnel
-  }
-]
+// macOS special entry (not a numbered desktop)
+const macosDesktop: Desktop = {
+  id: 99,
+  name: 'macOS Sonoma',
+  user: 'macos',
+  type: 'guacamole',
+  vncToken: guacTokens.macosVnc,
+  sshToken: guacTokens.macosSsh,
+  sshCmd: 'ssh techrechard.com@macos.braelin.uk',
+  ttydUrl: '',
+  wsUrl: 'wss://macos-guac.braelin.uk/'
+}
+
+// No hardcoded desktops - fetch from API
+const initialDesktops: Desktop[] = [macosDesktop]
 
 type ConnectionState = 'connecting' | 'connected' | 'error'
 
@@ -180,10 +121,8 @@ function App() {
           .sort((a: Desktop, b: Desktop) => a.id - b.id)
 
         if (apiDesktops.length > 0) {
-          // Keep macOS entry from initialDesktops
-          const macosDesktop = initialDesktops.find(d => d.user === 'macos')
-          const combined = macosDesktop ? [...apiDesktops, macosDesktop] : apiDesktops
-          setDesktops(combined)
+          // Combine API desktops with macOS
+          setDesktops([...apiDesktops, macosDesktop])
         }
       } catch (error) {
         console.error('Failed to fetch users:', error)
