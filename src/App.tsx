@@ -180,7 +180,10 @@ function App() {
           .sort((a: Desktop, b: Desktop) => a.id - b.id)
 
         if (apiDesktops.length > 0) {
-          setDesktops(apiDesktops)
+          // Keep macOS entry from initialDesktops
+          const macosDesktop = initialDesktops.find(d => d.user === 'macos')
+          const combined = macosDesktop ? [...apiDesktops, macosDesktop] : apiDesktops
+          setDesktops(combined)
         }
       } catch (error) {
         console.error('Failed to fetch users:', error)
