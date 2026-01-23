@@ -18,9 +18,10 @@ const getIsMobile = () => {
   return hasTouch || window.innerWidth <= 500;
 };
 
-export function SplitDesktop({ vncDisplay, terminalDisplay }: Props) {
+export function SplitDesktop({ vncDisplay, terminalDisplay, sshCmd }: Props) {
   const [viewMode, setViewMode] = useState<'stacked' | 'split'>('split');
   const [isMobile, setIsMobile] = useState(getIsMobile);
+  const [copied, setCopied] = useState(false);
 
   // Detect mobile on resize
   useEffect(() => {
@@ -36,14 +37,29 @@ export function SplitDesktop({ vncDisplay, terminalDisplay }: Props) {
     setViewMode(viewMode === 'stacked' ? 'split' : 'stacked');
   };
 
-  // Mobile view - VNC only (fullscreen)
-  // User can SSH separately from phone if needed
+  const copySSH = () => {
+    if (sshCmd) {
+      navigator.clipboard.writeText(sshCmd);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // Mobile view - VNC only (fullscreen) with SSH copy bar
   if (isMobile) {
     return (
       <div className="mobile-container">
         <div className="mobile-vnc-fullscreen">
           {vncDisplay}
         </div>
+        {sshCmd && (
+          <div className="mobile-ssh-bar" onClick={copySSH}>
+            <span className="mobile-ssh-label">SSH:</span>
+            <code className="mobile-ssh-cmd">
+              {copied ? '✓ Copied!' : sshCmd}
+            </code>
+          </div>
+        )}
       </div>
     );
   }
