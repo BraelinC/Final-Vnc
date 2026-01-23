@@ -91,7 +91,8 @@ const initialDesktops: Desktop[] = [
     user: 'macos',
     type: 'guacamole',
     vncToken: guacTokens.macosVnc,
-    sshCmd: 'N/A (use VNC)',
+    sshToken: guacTokens.macosSsh,
+    sshCmd: 'ssh techrechard.com@macos.braelin.uk',
     ttydUrl: '',
     wsUrl: 'wss://macos-guac.braelin.uk/'  // Local guacamole-lite via Cloudflare tunnel
   }

@@ -190,5 +190,18 @@ export const guacTokens = {
         port: 5900
       }
     }
+  }),
+  macosSsh: generateGuacToken({
+    connection: {
+      type: 'ssh',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 2222,
+        username: 'techrechard.com',
+        password: 'Mikey@2006',
+        scrollback: 5000,
+        'terminal-type': 'xterm-256color'
+      }
+    }
   })
 };
