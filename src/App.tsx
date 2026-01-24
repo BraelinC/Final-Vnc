@@ -23,7 +23,6 @@ interface Desktop {
   ttydUrl: string  // ttyd terminal URL for mobile
   wsUrl?: string   // Optional custom WebSocket URL for local guacamole-lite
   broadwayUrl?: string  // Broadway display URL (direct iframe)
-  ghosttyUrl?: string  // Ghostty terminal via Xpra (iframe)
 }
 
 // macOS special entry (not a numbered desktop)
@@ -68,15 +67,17 @@ function createDesktopFromUser(username: string, displayNumber: number, vncPort:
     }
   })
 
-  // Ghostty terminal via VNC (display :11 + displayNumber for each user)
-  const ghosttyPort = 5910 + displayNumber  // :11=5911, :12=5912, etc.
-  const terminalToken = generateGuacToken({
+  const sshToken = generateGuacToken({
     connection: {
-      type: 'vnc',
+      type: 'ssh',
       settings: {
         hostname: '127.0.0.1',
-        port: ghosttyPort,
-        password: '11142006'
+        port: 22,
+        username: username,
+        password: '11142006',
+        command: `tmux attach -t ${username} || tmux new -s ${username}`,
+        scrollback: 5000,
+        'terminal-type': 'xterm-256color'
       }
     }
   })
@@ -87,10 +88,9 @@ function createDesktopFromUser(username: string, displayNumber: number, vncPort:
     user: username,
     type: 'guacamole',
     vncToken,
-    sshToken: terminalToken,
+    sshToken,
     sshCmd: `ssh root@38.242.207.4 -t "su - ${username} -c 'tmux a -t ${username} || tmux new -s ${username}'"`,
-    ttydUrl: `https://term${displayNumber}.braelin.uk`,
-    ghosttyUrl: 'https://ghostty.braelin.uk'  // Ghostty via Xpra
+    ttydUrl: `https://term${displayNumber}.braelin.uk`
   }
 }
 
@@ -305,14 +305,7 @@ function App() {
                         />
                       }
                       terminalDisplay={
-                        desktop.ghosttyUrl ? (
-                          <iframe
-                            src={desktop.ghosttyUrl}
-                            style={{ width: '100%', height: '100%', border: 'none', background: '#000' }}
-                            title="Ghostty Terminal"
-                            allow="clipboard-read; clipboard-write"
-                          />
-                        ) : desktop.sshToken ? (
+                        desktop.sshToken ? (
                           <GuacamoleDisplay
                             token={desktop.sshToken}
                             className="guac-display"
