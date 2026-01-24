@@ -46,7 +46,7 @@ const broadwayDesktop: Desktop = {
   type: 'broadway',
   sshCmd: 'ssh broadway@38.242.207.4',
   ttydUrl: '',
-  broadwayUrl: 'https://broadway.braelin.uk'
+  broadwayUrl: 'http://broadway-direct.braelin.uk:9101'
 }
 
 // No hardcoded desktops - fetch from API
