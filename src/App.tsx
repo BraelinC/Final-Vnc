@@ -39,7 +39,6 @@ const macosDesktop: Desktop = {
 }
 
 // Broadway desktop - GTK apps rendered directly to browser (faster than VNC)
-// Note: Using direct IP until DNS is configured for broadway.braelin.uk
 const broadwayDesktop: Desktop = {
   id: 100,
   name: 'Broadway (Fast)',
@@ -47,7 +46,7 @@ const broadwayDesktop: Desktop = {
   type: 'broadway',
   sshCmd: 'ssh broadway@38.242.207.4',
   ttydUrl: '',
-  broadwayUrl: 'http://38.242.207.4:9100'
+  broadwayUrl: 'https://broadway.braelin.uk'
 }
 
 // No hardcoded desktops - fetch from API
