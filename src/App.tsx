@@ -134,8 +134,8 @@ function App() {
           .sort((a: Desktop, b: Desktop) => a.id - b.id)
 
         if (apiDesktops.length > 0) {
-          // Combine API desktops with macOS
-          setDesktops([...apiDesktops, macosDesktop])
+          // Combine API desktops with macOS and Broadway
+          setDesktops([...apiDesktops, macosDesktop, broadwayDesktop])
         }
       } catch (error) {
         console.error('Failed to fetch users:', error)
