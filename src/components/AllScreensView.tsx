@@ -5,10 +5,9 @@ interface Desktop {
   id: number
   name: string
   user: string
-  type?: 'novnc' | 'guacamole' | 'novnc-split' | 'broadway'
+  type?: 'novnc' | 'guacamole' | 'novnc-split'
   vncToken?: string
   sshToken?: string
-  broadwayUrl?: string
 }
 
 interface Props {

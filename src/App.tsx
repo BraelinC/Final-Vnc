@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react'
 import './App.css'
 import { SplitDesktop } from './components/SplitDesktop'
 import { GuacamoleDisplay } from './components/GuacamoleDisplay'
-import { BroadwayDisplay } from './components/BroadwayDisplay'
 import { AllScreensView } from './components/AllScreensView'
 import { ImagePaste } from './components/ImagePaste'
 import { guacTokens, generateGuacToken } from './lib/guacTokens'
@@ -14,7 +13,7 @@ interface Desktop {
   id: number
   name: string
   user: string
-  type: 'novnc' | 'guacamole' | 'novnc-split' | 'broadway'
+  type: 'novnc' | 'guacamole' | 'novnc-split'
   url?: string
   termUrl?: string
   vncToken?: string
@@ -22,7 +21,6 @@ interface Desktop {
   sshCmd: string
   ttydUrl: string  // ttyd terminal URL for mobile
   wsUrl?: string   // Optional custom WebSocket URL for local guacamole-lite
-  broadwayUrl?: string  // Broadway display URL (direct iframe)
 }
 
 // macOS special entry (not a numbered desktop)
@@ -38,19 +36,8 @@ const macosDesktop: Desktop = {
   wsUrl: 'wss://macos-guac.braelin.uk/'
 }
 
-// Broadway desktop - GTK apps rendered directly to browser (faster than VNC)
-const broadwayDesktop: Desktop = {
-  id: 100,
-  name: 'Broadway (Fast)',
-  user: 'broadway',
-  type: 'broadway',
-  sshCmd: 'ssh broadway@38.242.207.4',
-  ttydUrl: '',
-  broadwayUrl: 'https://broadway-direct.braelin.uk'
-}
-
 // No hardcoded desktops - fetch from API
-const initialDesktops: Desktop[] = [macosDesktop, broadwayDesktop]
+const initialDesktops: Desktop[] = [macosDesktop]
 
 type ConnectionState = 'connecting' | 'connected' | 'error'
 
@@ -134,8 +121,8 @@ function App() {
           .sort((a: Desktop, b: Desktop) => a.id - b.id)
 
         if (apiDesktops.length > 0) {
-          // Combine API desktops with macOS and Broadway
-          setDesktops([...apiDesktops, macosDesktop, broadwayDesktop])
+          // Combine API desktops with macOS
+          setDesktops([...apiDesktops, macosDesktop])
         }
       } catch (error) {
         console.error('Failed to fetch users:', error)
@@ -269,31 +256,7 @@ function App() {
             {desktops.map((desktop, index) => (
               <div key={desktop.id} className="slide">
                 {(index === currentIndex || preloadAll) ? (
-                  desktop.type === 'broadway' ? (
-                    // Broadway desktop - direct iframe, fullscreen
-                    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                      <BroadwayDisplay
-                        url={desktop.broadwayUrl!}
-                        className="broadway-display"
-                      />
-                      <div style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        background: 'rgba(74, 222, 128, 0.9)',
-                        color: '#000',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        zIndex: 100
-                      }}>
-                        BROADWAY (Fast Mode)
-                      </div>
-                    </div>
-                  ) : (
-                    // VNC/Guacamole desktop - split view
-                    <SplitDesktop
+                  <SplitDesktop
                       vncDisplay={
                         <GuacamoleDisplay
                           token={desktop.vncToken!}
@@ -323,7 +286,6 @@ function App() {
                       sshCmd={desktop.sshCmd}
                       ttydUrl={desktop.ttydUrl}
                     />
-                  )
                 ) : (
                   <div className="loading-placeholder">
                     <div className="spinner"></div>

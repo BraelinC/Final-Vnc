@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import { GuacamoleDisplay } from './GuacamoleDisplay'
-import { BroadwayDisplay } from './BroadwayDisplay'
 import './DesktopTile.css'
 
 type ConnectionState = 'connecting' | 'connected' | 'error'
@@ -9,10 +8,9 @@ interface Desktop {
   id: number
   name: string
   user: string
-  type?: 'novnc' | 'guacamole' | 'novnc-split' | 'broadway'
+  type?: 'novnc' | 'guacamole' | 'novnc-split'
   vncToken?: string
   sshToken?: string
-  broadwayUrl?: string
 }
 
 interface Props {
@@ -37,12 +35,7 @@ export function DesktopTile({ desktop, onClick, isLoaded }: Props) {
       </div>
       <div className="tile-content">
         {isLoaded ? (
-          desktop.type === 'broadway' && desktop.broadwayUrl ? (
-            <BroadwayDisplay
-              url={desktop.broadwayUrl}
-              className="tile-broadway-display"
-            />
-          ) : desktop.vncToken ? (
+          desktop.vncToken ? (
             <GuacamoleDisplay
               token={desktop.vncToken}
               className="tile-guac-display"
