@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Props {
   url: string;
@@ -8,6 +8,20 @@ interface Props {
 export function BroadwayDisplay({ url, className }: Props) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
+
+  // Detect orientation changes
+  useEffect(() => {
+    const handleResize = () => {
+      setIsPortrait(window.innerHeight > window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
 
   return (
     <div
@@ -16,7 +30,11 @@ export function BroadwayDisplay({ url, className }: Props) {
         width: '100%',
         height: '100%',
         position: 'relative',
-        background: '#000'
+        background: '#000',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden'
       }}
     >
       {/* Loading overlay */}
@@ -93,14 +111,20 @@ export function BroadwayDisplay({ url, className }: Props) {
         </div>
       )}
 
-      {/* Broadway iframe */}
+      {/* Broadway iframe - responsive for mobile */}
       <iframe
         src={url}
         style={{
-          width: '100%',
-          height: '100%',
+          width: isPortrait ? '100%' : '100%',
+          height: isPortrait ? '100%' : '100%',
           border: 'none',
-          display: loaded ? 'block' : 'none'
+          display: loaded ? 'block' : 'none',
+          // Scale down on mobile portrait for better fit
+          transform: isPortrait ? 'scale(1)' : 'none',
+          transformOrigin: 'top left',
+          maxWidth: '100vw',
+          maxHeight: '100vh',
+          objectFit: 'contain'
         }}
         onLoad={() => setLoaded(true)}
         onError={() => setError(true)}
@@ -111,6 +135,20 @@ export function BroadwayDisplay({ url, className }: Props) {
       <style>{`
         @keyframes broadway-spin {
           to { transform: rotate(360deg); }
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 768px) and (orientation: portrait) {
+          iframe {
+            width: 100% !important;
+            height: 100% !important;
+          }
+        }
+
+        /* Ensure touch scrolling works */
+        .broadway-display {
+          -webkit-overflow-scrolling: touch;
+          touch-action: manipulation;
         }
       `}</style>
     </div>
