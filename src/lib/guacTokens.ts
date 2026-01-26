@@ -204,13 +204,13 @@ export const guacTokens = {
       }
     }
   }),
-  // Mac Mini (physical machine - connects via local guacamole-lite)
+  // Mac Mini (physical machine - via Cloudflare Tunnel to Linux server)
   macMiniVnc: generateGuacToken({
     connection: {
       type: 'vnc',
       settings: {
         hostname: '127.0.0.1',
-        port: 5900,
+        port: 5910,
         password: '11142006'
       }
     }
@@ -220,7 +220,7 @@ export const guacTokens = {
       type: 'ssh',
       settings: {
         hostname: '127.0.0.1',
-        port: 22,
+        port: 2223,
         username: 'braelin',
         password: 'Mikey@11142006',
         scrollback: 5000,

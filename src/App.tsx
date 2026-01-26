@@ -45,8 +45,8 @@ const macMiniDesktop: Desktop = {
   vncToken: guacTokens.macMiniVnc,
   sshToken: guacTokens.macMiniSsh,
   sshCmd: 'ssh braelin@192.168.122.142',
-  ttydUrl: '',
-  wsUrl: 'wss://macmini-guac.braelin.uk/'
+  ttydUrl: ''
+  // Uses default wss://guac.braelin.uk/ (no wsUrl override)
 }
 
 // No hardcoded desktops - fetch from API
