@@ -36,8 +36,21 @@ const macosDesktop: Desktop = {
   wsUrl: 'wss://macos-guac.braelin.uk/'
 }
 
+// Mac Mini (physical machine)
+const macMiniDesktop: Desktop = {
+  id: 100,
+  name: 'Mac Mini',
+  user: 'braelin',
+  type: 'guacamole',
+  vncToken: guacTokens.macMiniVnc,
+  sshToken: guacTokens.macMiniSsh,
+  sshCmd: 'ssh braelin@192.168.122.142',
+  ttydUrl: '',
+  wsUrl: 'wss://macos-guac.braelin.uk/'
+}
+
 // No hardcoded desktops - fetch from API
-const initialDesktops: Desktop[] = [macosDesktop]
+const initialDesktops: Desktop[] = [macosDesktop, macMiniDesktop]
 
 type ConnectionState = 'connecting' | 'connected' | 'error'
 
@@ -121,8 +134,8 @@ function App() {
           .sort((a: Desktop, b: Desktop) => a.id - b.id)
 
         if (apiDesktops.length > 0) {
-          // Combine API desktops with macOS
-          setDesktops([...apiDesktops, macosDesktop])
+          // Combine API desktops with macOS entries
+          setDesktops([...apiDesktops, macosDesktop, macMiniDesktop])
         }
       } catch (error) {
         console.error('Failed to fetch users:', error)

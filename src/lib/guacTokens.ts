@@ -203,5 +203,29 @@ export const guacTokens = {
         'terminal-type': 'xterm-256color'
       }
     }
+  }),
+  // Mac Mini (physical machine)
+  macMiniVnc: generateGuacToken({
+    connection: {
+      type: 'vnc',
+      settings: {
+        hostname: '192.168.122.142',
+        port: 5900,
+        password: '11142006'
+      }
+    }
+  }),
+  macMiniSsh: generateGuacToken({
+    connection: {
+      type: 'ssh',
+      settings: {
+        hostname: '192.168.122.142',
+        port: 22,
+        username: 'braelin',
+        password: 'Mikey@11142006',
+        scrollback: 5000,
+        'terminal-type': 'xterm-256color'
+      }
+    }
   })
 };
