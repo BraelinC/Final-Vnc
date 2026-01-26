@@ -36,7 +36,7 @@ const macosDesktop: Desktop = {
   wsUrl: 'wss://macos-guac.braelin.uk/'
 }
 
-// Mac Mini (physical machine)
+// Mac Mini (physical machine via Cloudflare Tunnel)
 const macMiniDesktop: Desktop = {
   id: 100,
   name: 'Mac Mini',
@@ -46,7 +46,7 @@ const macMiniDesktop: Desktop = {
   sshToken: guacTokens.macMiniSsh,
   sshCmd: 'ssh braelin@192.168.122.142',
   ttydUrl: '',
-  wsUrl: 'wss://macos-guac.braelin.uk/'
+  wsUrl: 'wss://macmini-guac.braelin.uk/'
 }
 
 // No hardcoded desktops - fetch from API
