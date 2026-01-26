@@ -223,6 +223,7 @@ export const guacTokens = {
         port: 2223,
         username: 'braelin',
         password: 'Mikey@11142006',
+        command: 'tmux attach -t claude || tmux new -s claude',
         scrollback: 5000,
         'terminal-type': 'xterm-256color'
       }
