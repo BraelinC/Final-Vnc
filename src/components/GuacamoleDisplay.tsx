@@ -35,7 +35,16 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       clientRef.current.disconnect();
     }
 
+    console.log(`[${connectionId}] Creating WebSocket tunnel to: ${wsUrl}`);
     const tunnel = new Guacamole.WebSocketTunnel(wsUrl);
+
+    tunnel.onerror = (status) => {
+      console.error(`[${connectionId}] Tunnel error:`, status);
+    };
+
+    tunnel.onstatechange = (state) => {
+      console.log(`[${connectionId}] Tunnel state changed to:`, state);
+    };
 
     const client = new Guacamole.Client(tunnel);
     clientRef.current = client;
@@ -93,19 +102,24 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
     };
 
     client.onerror = (error) => {
-      console.error('Guacamole error:', error);
+      console.error(`[${connectionId}] Guacamole client error:`, error);
+      onStateChangeRef.current(connectionId, 'error');
     };
 
     // Track connection state - only send events when connected (state 3)
     let isConnected = false;
+    const stateNames = ['IDLE', 'CONNECTING', 'WAITING', 'CONNECTED', 'DISCONNECTING', 'DISCONNECTED'];
     client.onstatechange = (state) => {
-      console.log('Guacamole state:', state, 'for', connectionId);
-      isConnected = (state === 3); // 3 = connected
+      const stateName = stateNames[state] || 'UNKNOWN';
+      console.log(`[${connectionId}] Guacamole state changed: ${state} (${stateName})`);
+      isConnected = (state === 3); // 3 = CONNECTED
       if (state === 3) {
         hasConnectedRef.current = true;
+        console.log(`[${connectionId}] ✓ Successfully connected!`);
         onStateChangeRef.current(connectionId, 'connected');
-      } else if (state === 5) { // 5 = disconnected/error
+      } else if (state === 5) { // 5 = DISCONNECTED
         hasConnectedRef.current = false;
+        console.error(`[${connectionId}] ✗ Disconnected/Error`);
         onStateChangeRef.current(connectionId, 'error');
       }
     };
