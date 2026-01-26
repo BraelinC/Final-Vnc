@@ -23,33 +23,21 @@ interface Desktop {
   wsUrl?: string   // Optional custom WebSocket URL for local guacamole-lite
 }
 
-// macOS special entry (not a numbered desktop)
-const macosDesktop: Desktop = {
-  id: 99,
-  name: 'macOS Sonoma',
-  user: 'macos',
-  type: 'guacamole',
-  vncToken: guacTokens.macosVnc,
-  sshToken: guacTokens.macosSsh,
-  sshCmd: 'ssh techrechard.com@macos.braelin.uk',
-  ttydUrl: '',
-  wsUrl: 'wss://macos-guac.braelin.uk/'
-}
-
-// Mac Mini (physical machine via cloudflared tunnel)
+// Mac Mini (physical machine via Cloudflare Tunnel)
 const macMiniDesktop: Desktop = {
   id: 100,
   name: 'Mac Mini',
-  user: 'macmini',
+  user: 'braelin',
   type: 'guacamole',
   vncToken: guacTokens.macMiniVnc,
   sshToken: guacTokens.macMiniSsh,
-  sshCmd: 'cloudflared access ssh --hostname macmini-ssh.braelin.uk',
+  sshCmd: 'ssh braelin@192.168.122.142',
   ttydUrl: ''
+  // Uses default wss://guac.braelin.uk/
 }
 
 // No hardcoded desktops - fetch from API
-const initialDesktops: Desktop[] = [macosDesktop, macMiniDesktop]
+const initialDesktops: Desktop[] = [macMiniDesktop]
 
 type ConnectionState = 'connecting' | 'connected' | 'error'
 
@@ -133,8 +121,8 @@ function App() {
           .sort((a: Desktop, b: Desktop) => a.id - b.id)
 
         if (apiDesktops.length > 0) {
-          // Combine API desktops with macOS
-          setDesktops([...apiDesktops, macosDesktop])
+          // Combine API desktops with Mac Mini
+          setDesktops([...apiDesktops, macMiniDesktop])
         }
       } catch (error) {
         console.error('Failed to fetch users:', error)
