@@ -204,13 +204,13 @@ export const guacTokens = {
       }
     }
   }),
-  // Mac Mini (physical machine - via Cloudflare Tunnel to Linux server)
+  // Mac Mini (via cloudflared tunnel - localhost:5950 proxies to macmini-vnc.braelin.uk)
   macMiniVnc: generateGuacToken({
     connection: {
       type: 'vnc',
       settings: {
         hostname: '127.0.0.1',
-        port: 5910,
+        port: 5950,
         password: '11142006'
       }
     }
@@ -220,7 +220,7 @@ export const guacTokens = {
       type: 'ssh',
       settings: {
         hostname: '127.0.0.1',
-        port: 2223,
+        port: 2250,
         username: 'braelin',
         password: 'Mikey@11142006',
         scrollback: 5000,

@@ -36,17 +36,16 @@ const macosDesktop: Desktop = {
   wsUrl: 'wss://macos-guac.braelin.uk/'
 }
 
-// Mac Mini (physical machine via Cloudflare Tunnel)
+// Mac Mini (physical machine via cloudflared tunnel)
 const macMiniDesktop: Desktop = {
   id: 100,
   name: 'Mac Mini',
-  user: 'braelin',
+  user: 'macmini',
   type: 'guacamole',
   vncToken: guacTokens.macMiniVnc,
   sshToken: guacTokens.macMiniSsh,
-  sshCmd: 'ssh braelin@192.168.122.142',
+  sshCmd: 'cloudflared access ssh --hostname macmini-ssh.braelin.uk',
   ttydUrl: ''
-  // Uses default wss://guac.braelin.uk/ (no wsUrl override)
 }
 
 // No hardcoded desktops - fetch from API
@@ -134,8 +133,8 @@ function App() {
           .sort((a: Desktop, b: Desktop) => a.id - b.id)
 
         if (apiDesktops.length > 0) {
-          // Combine API desktops with macOS entries
-          setDesktops([...apiDesktops, macosDesktop, macMiniDesktop])
+          // Combine API desktops with macOS
+          setDesktops([...apiDesktops, macosDesktop])
         }
       } catch (error) {
         console.error('Failed to fetch users:', error)
@@ -270,35 +269,35 @@ function App() {
               <div key={desktop.id} className="slide">
                 {(index === currentIndex || preloadAll) ? (
                   <SplitDesktop
-                      vncDisplay={
+                    vncDisplay={
+                      <GuacamoleDisplay
+                        token={desktop.vncToken!}
+                        className="guac-display"
+                        connectionId={`vnc-${desktop.id}`}
+                        connectionState={connectionStates[`vnc-${desktop.id}`] || 'connecting'}
+                        onConnectionStateChange={updateConnectionState}
+                        wsUrl={desktop.wsUrl}
+                      />
+                    }
+                    terminalDisplay={
+                      desktop.sshToken ? (
                         <GuacamoleDisplay
-                          token={desktop.vncToken!}
+                          token={desktop.sshToken}
                           className="guac-display"
-                          connectionId={`vnc-${desktop.id}`}
-                          connectionState={connectionStates[`vnc-${desktop.id}`] || 'connecting'}
+                          connectionId={`ssh-${desktop.id}`}
+                          connectionState={connectionStates[`ssh-${desktop.id}`] || 'connecting'}
                           onConnectionStateChange={updateConnectionState}
                           wsUrl={desktop.wsUrl}
                         />
-                      }
-                      terminalDisplay={
-                        desktop.sshToken ? (
-                          <GuacamoleDisplay
-                            token={desktop.sshToken}
-                            className="guac-display"
-                            connectionId={`ssh-${desktop.id}`}
-                            connectionState={connectionStates[`ssh-${desktop.id}`] || 'connecting'}
-                            onConnectionStateChange={updateConnectionState}
-                            wsUrl={desktop.wsUrl}
-                          />
-                        ) : (
-                          <div className="no-terminal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888', background: '#1a1a2e' }}>
-                            <p>No terminal available for {desktop.name}</p>
-                          </div>
-                        )
-                      }
-                      sshCmd={desktop.sshCmd}
-                      ttydUrl={desktop.ttydUrl}
-                    />
+                      ) : (
+                        <div className="no-terminal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888', background: '#1a1a2e' }}>
+                          <p>No terminal available for {desktop.name}</p>
+                        </div>
+                      )
+                    }
+                    sshCmd={desktop.sshCmd}
+                    ttydUrl={desktop.ttydUrl}
+                  />
                 ) : (
                   <div className="loading-placeholder">
                     <div className="spinner"></div>
