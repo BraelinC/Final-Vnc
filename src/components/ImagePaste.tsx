@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const CONVEX_HTTP = 'https://joyous-armadillo-272.convex.site';
+const VPS_WEBHOOK = 'http://38.242.207.4:9876';
 
 interface PastedImage {
   _id: string;
@@ -98,6 +99,33 @@ export function ImagePaste({ vncSession, isVisible = true }: Props) {
 
       if (!saveResponse.ok) {
         throw new Error('Failed to save metadata');
+      }
+
+      const { imageId } = await saveResponse.json();
+
+      // Get the download URL and notify VPS webhook for instant sync
+      setUploadProgress('Syncing to VPS...');
+      try {
+        // Get image URL from Convex
+        const imageResponse = await fetch(`${CONVEX_HTTP}/api/images?session=${vncSession}&limit=1`);
+        const images = await imageResponse.json();
+        const uploadedImage = images.find((img: any) => img._id === imageId);
+
+        if (uploadedImage?.url) {
+          await fetch(VPS_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session: vncSession,
+              fileName,
+              imageId,
+              url: uploadedImage.url,
+            }),
+          });
+        }
+      } catch (webhookError) {
+        console.error('Webhook notification failed:', webhookError);
+        // Don't fail the upload if webhook fails
       }
 
       setUploadProgress('Done!');
