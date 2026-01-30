@@ -302,11 +302,13 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
         e.stopPropagation();
         if (isConnected) {
           if (e.shiftKey) {
-            // Shift+Tab: Shift is already held (sent by Guacamole keyboard)
-            // Just send Tab - the Shift modifier is already active on the remote
-            console.log('Shift+Tab detected - sending Tab (Shift already held)');
+            // Shift+Tab: Send complete Shift+Tab sequence
+            // We handle this fully ourselves to ensure correct order
+            console.log('Shift+Tab detected - sending full Shift+Tab sequence');
+            client.sendKeyEvent(1, 65505); // Shift_L down
             client.sendKeyEvent(1, 65289); // Tab down
             client.sendKeyEvent(0, 65289); // Tab up
+            client.sendKeyEvent(0, 65505); // Shift_L up
           } else {
             // Regular Tab
             console.log('Tab detected - sending Tab');
@@ -356,10 +358,13 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
     // Guacamole keyboard - send all keys EXCEPT Ctrl+V and Tab to VNC
     // Tab/Shift+Tab are handled manually in handleKeyDown for better control
     let ctrlHeld = false;
+    let shiftHeldForTab = false; // Track if Shift is held when Tab is pressed
     const keyboard = new Guacamole.Keyboard(container);
     keyboard.onkeydown = (keysym: number) => {
       // Track Ctrl
       if (keysym === 65507 || keysym === 65508) ctrlHeld = true;
+      // Track Shift - we'll block its release if Tab was pressed
+      if (keysym === 65505 || keysym === 65506) shiftHeldForTab = false;
       // Block Ctrl+V - paste event handles it
       if (ctrlHeld && keysym === 118) {
         console.log('Blocking Ctrl+V - paste event will handle');
@@ -368,6 +373,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       // Block Tab and ISO_Left_Tab - handleKeyDown handles these manually
       if (keysym === 65289 || keysym === 65056) {
         console.log('Blocking Tab in Guacamole keyboard - handleKeyDown will handle');
+        shiftHeldForTab = true; // Mark that Tab was pressed while Shift may be held
         return true;
       }
       // Only send if connected
@@ -383,6 +389,12 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       if (ctrlHeld && keysym === 118) return;
       // Block Tab and ISO_Left_Tab release
       if (keysym === 65289 || keysym === 65056) return;
+      // Block Shift release if we just handled Shift+Tab (we sent our own Shift up)
+      if ((keysym === 65505 || keysym === 65506) && shiftHeldForTab) {
+        console.log('Blocking Shift release - already sent by Tab handler');
+        shiftHeldForTab = false;
+        return;
+      }
       // Only send if connected
       if (isConnected) {
         console.log(`KEY UP: ${keysym}`);
