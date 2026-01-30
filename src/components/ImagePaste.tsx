@@ -168,7 +168,9 @@ export function ImagePaste({ vncSession, isVisible = true }: Props) {
   // Handle file input change
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    // Accept image/* or SVG files (some browsers report SVG as text/xml or application/xml)
+    const isSvg = file?.name.toLowerCase().endsWith('.svg');
+    if (file && (file.type.startsWith('image/') || isSvg)) {
       uploadImage(file);
     }
     // Reset input
@@ -282,7 +284,7 @@ export function ImagePaste({ vncSession, isVisible = true }: Props) {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.svg"
               onChange={handleFileSelect}
               style={{ display: 'none' }}
             />
