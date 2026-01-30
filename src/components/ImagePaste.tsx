@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const CONVEX_HTTP = 'https://joyous-armadillo-272.convex.site';
-const VPS_UPLOAD = 'http://38.242.207.4:9876/upload';
+const VPS_UPLOAD = 'https://upload.braelin.uk/upload';
 
 interface PastedImage {
   _id: string;
