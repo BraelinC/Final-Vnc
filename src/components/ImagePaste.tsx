@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const CONVEX_HTTP = 'https://joyous-armadillo-272.convex.site';
-const VPS_WEBHOOK = 'http://38.242.207.4:9876';
+const VPS_UPLOAD = 'http://38.242.207.4:9876/upload';
 
 interface PastedImage {
   _id: string;
@@ -45,88 +45,34 @@ export function ImagePaste({ vncSession, isVisible = true }: Props) {
     return () => clearInterval(interval);
   }, [fetchImages]);
 
-  // Upload image to Convex
+  // Upload image via VPS proxy (bypasses CORS issues with Convex)
   const uploadImage = useCallback(async (file: File) => {
     setUploading(true);
-    setUploadProgress('Getting upload URL...');
+    setUploadProgress('Uploading...');
 
     try {
-      // Step 1: Get upload URL
-      const uploadResponse = await fetch(`${CONVEX_HTTP}/api/images/upload`, {
+      const fileName = file.name || `pasted-${Date.now()}.${file.type.split('/')[1] || 'png'}`;
+      const mimeType = file.type || 'image/png';
+
+      // Upload directly to VPS proxy which handles Convex upload + local sync
+      const response = await fetch(VPS_UPLOAD, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          vncSession,
-          fileName: file.name || `pasted-${Date.now()}.${file.type.split('/')[1] || 'png'}`,
-          mimeType: file.type,
-          size: file.size,
-        }),
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to get upload URL');
-      }
-
-      const { uploadUrl, fileName } = await uploadResponse.json();
-      setUploadProgress('Uploading image...');
-
-      // Step 2: Upload file to Convex storage
-      const storageResponse = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': file.type },
+        headers: {
+          'Content-Type': mimeType,
+          'X-Session': vncSession,
+          'X-Filename': fileName,
+          'X-MimeType': mimeType,
+        },
         body: file,
       });
 
-      if (!storageResponse.ok) {
-        throw new Error('Failed to upload to storage');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
       }
 
-      const { storageId } = await storageResponse.json();
-      setUploadProgress('Saving metadata...');
-
-      // Step 3: Save metadata
-      const saveResponse = await fetch(`${CONVEX_HTTP}/api/images/save`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          vncSession,
-          fileName,
-          storageId,
-          mimeType: file.type,
-          size: file.size,
-        }),
-      });
-
-      if (!saveResponse.ok) {
-        throw new Error('Failed to save metadata');
-      }
-
-      const { imageId } = await saveResponse.json();
-
-      // Get the download URL and notify VPS webhook for instant sync
-      setUploadProgress('Syncing to VPS...');
-      try {
-        // Get image URL from Convex
-        const imageResponse = await fetch(`${CONVEX_HTTP}/api/images?session=${vncSession}&limit=1`);
-        const images = await imageResponse.json();
-        const uploadedImage = images.find((img: any) => img._id === imageId);
-
-        if (uploadedImage?.url) {
-          await fetch(VPS_WEBHOOK, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              session: vncSession,
-              fileName,
-              imageId,
-              url: uploadedImage.url,
-            }),
-          });
-        }
-      } catch (webhookError) {
-        console.error('Webhook notification failed:', webhookError);
-        // Don't fail the upload if webhook fails
-      }
+      const result = await response.json();
+      console.log('Upload result:', result);
 
       setUploadProgress('Done!');
       setTimeout(() => setUploadProgress(''), 2000);
