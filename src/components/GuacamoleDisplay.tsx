@@ -302,14 +302,11 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
         e.stopPropagation();
         if (isConnected) {
           if (e.shiftKey) {
-            // Shift+Tab: Send ISO_Left_Tab (0xFE20 = 65056) for reverse tab
-            // Some terminals expect this, others expect Shift+Tab combo
-            // Send both approaches for maximum compatibility
-            console.log('Shift+Tab detected - sending ISO_Left_Tab');
-            client.sendKeyEvent(1, 65505); // Shift down
-            client.sendKeyEvent(1, 65056); // ISO_Left_Tab down (0xFE20)
-            client.sendKeyEvent(0, 65056); // ISO_Left_Tab up
-            client.sendKeyEvent(0, 65505); // Shift up
+            // Shift+Tab: Shift is already held (sent by Guacamole keyboard)
+            // Just send Tab - the Shift modifier is already active on the remote
+            console.log('Shift+Tab detected - sending Tab (Shift already held)');
+            client.sendKeyEvent(1, 65289); // Tab down
+            client.sendKeyEvent(0, 65289); // Tab up
           } else {
             // Regular Tab
             console.log('Tab detected - sending Tab');
