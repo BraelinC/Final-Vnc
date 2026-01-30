@@ -347,10 +347,25 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
 
     // Document-level Tab capture to prevent focus leaving container
     // This catches Tab/Shift+Tab before browser can change focus
+    // We handle Tab here in capture phase to ensure we get it before browser focus management
     const handleDocumentKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Tab' && document.activeElement === container) {
         e.preventDefault();
         e.stopPropagation();
+        // Send Tab/Shift+Tab to VNC from here since we're capturing at document level
+        if (isConnected) {
+          if (e.shiftKey) {
+            console.log('Shift+Tab detected (document capture) - sending full Shift+Tab sequence');
+            client.sendKeyEvent(1, 65505); // Shift_L down
+            client.sendKeyEvent(1, 65289); // Tab down
+            client.sendKeyEvent(0, 65289); // Tab up
+            client.sendKeyEvent(0, 65505); // Shift_L up
+          } else {
+            console.log('Tab detected (document capture) - sending Tab');
+            client.sendKeyEvent(1, 65289); // Tab down
+            client.sendKeyEvent(0, 65289); // Tab up
+          }
+        }
       }
     };
     document.addEventListener('keydown', handleDocumentKeyDown, true); // capture phase
