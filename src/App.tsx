@@ -36,8 +36,21 @@ const macMiniDesktop: Desktop = {
   // Uses default wss://guac.braelin.uk/
 }
 
+// Braelin PC (physical machine via Cloudflare Tunnel)
+const braelinPcDesktop: Desktop = {
+  id: 101,
+  name: 'Braelin PC',
+  user: 'braelinpc',
+  type: 'guacamole',
+  vncToken: guacTokens.braelinPcVnc,
+  sshToken: guacTokens.braelinPcSsh,
+  sshCmd: 'ssh -o ProxyCommand="cloudflared access ssh --hostname %h" braelinpc@braelinpc.braelin.uk',
+  ttydUrl: ''
+  // Uses default wss://guac.braelin.uk/
+}
+
 // No hardcoded desktops - fetch from API
-const initialDesktops: Desktop[] = [macMiniDesktop]
+const initialDesktops: Desktop[] = [macMiniDesktop, braelinPcDesktop]
 
 type ConnectionState = 'connecting' | 'connected' | 'error'
 
@@ -121,8 +134,8 @@ function App() {
           .sort((a: Desktop, b: Desktop) => a.id - b.id)
 
         if (apiDesktops.length > 0) {
-          // Combine API desktops with Mac Mini
-          setDesktops([...apiDesktops, macMiniDesktop])
+          // Combine API desktops with Mac Mini + Braelin PC
+          setDesktops([...apiDesktops, macMiniDesktop, braelinPcDesktop])
         }
       } catch (error) {
         console.error('Failed to fetch users:', error)

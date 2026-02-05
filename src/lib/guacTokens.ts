@@ -228,5 +228,29 @@ export const guacTokens = {
         'terminal-type': 'xterm-256color'
       }
     }
+  }),
+  braelinPcVnc: generateGuacToken({
+    connection: {
+      type: 'vnc',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 5951,
+        password: '11142006'
+      }
+    }
+  }),
+  braelinPcSsh: generateGuacToken({
+    connection: {
+      type: 'ssh',
+      settings: {
+        hostname: '127.0.0.1',
+        port: 2224,
+        username: 'braelinpc',
+        password: '11142006',
+        command: 'tmux attach -t braelinpc || tmux new -s braelinpc',
+        scrollback: 5000,
+        'terminal-type': 'xterm-256color'
+      }
+    }
   })
 };
