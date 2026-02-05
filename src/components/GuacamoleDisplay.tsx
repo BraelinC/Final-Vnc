@@ -18,6 +18,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
   const scaleRef = useRef<number>(1);
   const hasConnectedRef = useRef(false);
   const isConnectedRef = useRef(false);
+  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   // Store callback in ref to avoid dependency issues
   const onStateChangeRef = useRef(onConnectionStateChange);
   onStateChangeRef.current = onConnectionStateChange;
@@ -306,6 +307,8 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       }
     };
 
+    const useMobileInput = isTouchDevice;
+
     const handleInputKeyDown = (e: KeyboardEvent) => {
       if (!isConnectedRef.current) return;
       let keyCode: number | null = null;
@@ -399,12 +402,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       e.preventDefault();
       e.stopPropagation();
     };
-    container.addEventListener('keydown', handleKeyDown);
-    container.addEventListener('keyup', handleKeyUp);
 
-    // Document-level Tab capture to prevent focus leaving container
-    // This catches Tab/Shift+Tab before browser can change focus
-    // We handle Tab here in capture phase to ensure we get it before browser focus management
     const handleDocumentKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Tab' && document.activeElement === container) {
         e.preventDefault();
@@ -425,54 +423,64 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
         }
       }
     };
-    document.addEventListener('keydown', handleDocumentKeyDown, true); // capture phase
 
-    // Guacamole keyboard - send all keys EXCEPT Ctrl+V and Tab to VNC
-    // Tab/Shift+Tab are handled manually in handleKeyDown for better control
+    let keyboard: Guacamole.Keyboard | null = null;
     let ctrlHeld = false;
     let shiftHeldForTab = false; // Track if Shift is held when Tab is pressed
-    const keyboard = new Guacamole.Keyboard(container);
-    keyboard.onkeydown = (keysym: number) => {
-      // Track Ctrl
-      if (keysym === 65507 || keysym === 65508) ctrlHeld = true;
-      // Track Shift - we'll block its release if Tab was pressed
-      if (keysym === 65505 || keysym === 65506) shiftHeldForTab = false;
-      // Block Ctrl+V - paste event handles it
-      if (ctrlHeld && keysym === 118) {
-        console.log('Blocking Ctrl+V - paste event will handle');
+
+    if (!useMobileInput) {
+      container.addEventListener('keydown', handleKeyDown);
+      container.addEventListener('keyup', handleKeyUp);
+      // Document-level Tab capture to prevent focus leaving container
+      // This catches Tab/Shift+Tab before browser can change focus
+      // We handle Tab here in capture phase to ensure we get it before browser focus management
+      document.addEventListener('keydown', handleDocumentKeyDown, true); // capture phase
+
+      // Guacamole keyboard - send all keys EXCEPT Ctrl+V and Tab to VNC
+      // Tab/Shift+Tab are handled manually in handleKeyDown for better control
+      keyboard = new Guacamole.Keyboard(container);
+      keyboard.onkeydown = (keysym: number) => {
+        // Track Ctrl
+        if (keysym === 65507 || keysym === 65508) ctrlHeld = true;
+        // Track Shift - we'll block its release if Tab was pressed
+        if (keysym === 65505 || keysym === 65506) shiftHeldForTab = false;
+        // Block Ctrl+V - paste event handles it
+        if (ctrlHeld && keysym === 118) {
+          console.log('Blocking Ctrl+V - paste event will handle');
+          return true;
+        }
+        // Block Tab and ISO_Left_Tab - handleKeyDown handles these manually
+        if (keysym === 65289 || keysym === 65056) {
+          console.log('Blocking Tab in Guacamole keyboard - handleKeyDown will handle');
+          shiftHeldForTab = true; // Mark that Tab was pressed while Shift may be held
+          return true;
+        }
+        // Only send if connected
+        if (isConnectedRef.current) {
+          console.log(`KEY DOWN: ${keysym}`);
+          client.sendKeyEvent(1, keysym);
+        }
         return true;
-      }
-      // Block Tab and ISO_Left_Tab - handleKeyDown handles these manually
-      if (keysym === 65289 || keysym === 65056) {
-        console.log('Blocking Tab in Guacamole keyboard - handleKeyDown will handle');
-        shiftHeldForTab = true; // Mark that Tab was pressed while Shift may be held
-        return true;
-      }
-      // Only send if connected
-      if (isConnectedRef.current) {
-        console.log(`KEY DOWN: ${keysym}`);
-        client.sendKeyEvent(1, keysym);
-      }
-      return true;
-    };
-    keyboard.onkeyup = (keysym: number) => {
-      if (keysym === 65507 || keysym === 65508) ctrlHeld = false;
-      // Block Ctrl+V release
-      if (ctrlHeld && keysym === 118) return;
-      // Block Tab and ISO_Left_Tab release
-      if (keysym === 65289 || keysym === 65056) return;
-      // Block Shift release if we just handled Shift+Tab (we sent our own Shift up)
-      if ((keysym === 65505 || keysym === 65506) && shiftHeldForTab) {
-        console.log('Blocking Shift release - already sent by Tab handler');
-        shiftHeldForTab = false;
-        return;
-      }
-      // Only send if connected
-      if (isConnectedRef.current) {
-        console.log(`KEY UP: ${keysym}`);
-        client.sendKeyEvent(0, keysym);
-      }
-    };
+      };
+      keyboard.onkeyup = (keysym: number) => {
+        if (keysym === 65507 || keysym === 65508) ctrlHeld = false;
+        // Block Ctrl+V release
+        if (ctrlHeld && keysym === 118) return;
+        // Block Tab and ISO_Left_Tab release
+        if (keysym === 65289 || keysym === 65056) return;
+        // Block Shift release if we just handled Shift+Tab (we sent our own Shift up)
+        if ((keysym === 65505 || keysym === 65506) && shiftHeldForTab) {
+          console.log('Blocking Shift release - already sent by Tab handler');
+          shiftHeldForTab = false;
+          return;
+        }
+        // Only send if connected
+        if (isConnectedRef.current) {
+          console.log(`KEY UP: ${keysym}`);
+          client.sendKeyEvent(0, keysym);
+        }
+      };
+    }
 
     // Request VNC at container size (server may ignore)
     // Pass token via connect() instead of URL to avoid base64 corruption
@@ -492,9 +500,11 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       container.removeEventListener('keydown', handleKeyDown);
       container.removeEventListener('keyup', handleKeyUp);
       document.removeEventListener('keydown', handleDocumentKeyDown, true);
-      keyboard.onkeydown = null;
-      keyboard.onkeyup = null;
-      keyboard.reset();
+      if (keyboard) {
+        keyboard.onkeydown = null;
+        keyboard.onkeyup = null;
+        keyboard.reset();
+      }
       client.disconnect();
     };
   }, [token, connectionId, wsUrl]);
