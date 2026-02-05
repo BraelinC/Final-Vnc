@@ -17,6 +17,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
   const clientRef = useRef<Guacamole.Client | null>(null);
   const scaleRef = useRef<number>(1);
   const hasConnectedRef = useRef(false);
+  const isConnectedRef = useRef(false);
   // Store callback in ref to avoid dependency issues
   const onStateChangeRef = useRef(onConnectionStateChange);
   onStateChangeRef.current = onConnectionStateChange;
@@ -107,12 +108,12 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
     };
 
     // Track connection state - only send events when connected (state 3)
-    let isConnected = false;
+    isConnectedRef.current = false;
     const stateNames = ['IDLE', 'CONNECTING', 'WAITING', 'CONNECTED', 'DISCONNECTING', 'DISCONNECTED'];
     client.onstatechange = (state) => {
       const stateName = stateNames[state] || 'UNKNOWN';
       console.log(`[${connectionId}] Guacamole state changed: ${state} (${stateName})`);
-      isConnected = (state === 3); // 3 = CONNECTED
+      isConnectedRef.current = (state === 3); // 3 = CONNECTED
       if (state === 3) {
         hasConnectedRef.current = true;
         console.log(`[${connectionId}] ✓ Successfully connected!`);
@@ -148,7 +149,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
 
     // Type text directly by sending key events for each character
     const typeText = (text: string) => {
-      if (!isConnected) {
+      if (!isConnectedRef.current) {
         console.log('Not connected, cannot type');
         return;
       }
@@ -207,7 +208,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       }
 
       // Only send mouse state if connected
-      if (isConnected) {
+      if (isConnectedRef.current) {
         client.sendMouseState(mouseState);
       }
       e.preventDefault();
@@ -218,7 +219,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
     let copyModeTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const handleWheel = (e: WheelEvent) => {
-      if (!isConnected) {
+      if (!isConnectedRef.current) {
         return;
       }
 
@@ -274,12 +275,68 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
     container.addEventListener('wheel', handleWheel, { passive: false });
     container.addEventListener('contextmenu', (e) => e.preventDefault());
 
+    // Hidden input to trigger mobile keyboard
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'text';
+    hiddenInput.autocomplete = 'off';
+    hiddenInput.autocapitalize = 'off';
+    hiddenInput.spellcheck = false;
+    hiddenInput.inputMode = 'text';
+    hiddenInput.style.position = 'absolute';
+    hiddenInput.style.opacity = '0';
+    hiddenInput.style.left = '-9999px';
+    hiddenInput.style.top = '0';
+    hiddenInput.style.width = '1px';
+    hiddenInput.style.height = '1px';
+    container.appendChild(hiddenInput);
+
+    const focusInput = () => {
+      try {
+        hiddenInput.focus({ preventScroll: true });
+      } catch {
+        hiddenInput.focus();
+      }
+    };
+
+    const handleTextInput = () => {
+      const value = hiddenInput.value;
+      if (value) {
+        typeText(value);
+        hiddenInput.value = '';
+      }
+    };
+
+    const handleInputKeyDown = (e: KeyboardEvent) => {
+      if (!isConnectedRef.current) return;
+      let keyCode: number | null = null;
+      if (e.key === 'Backspace') keyCode = 65288;
+      if (e.key === 'Enter') keyCode = 65293;
+      if (e.key === 'Tab') keyCode = 65289;
+      if (e.key === 'Escape') keyCode = 65307;
+      if (e.key === 'ArrowLeft') keyCode = 65361;
+      if (e.key === 'ArrowUp') keyCode = 65362;
+      if (e.key === 'ArrowRight') keyCode = 65363;
+      if (e.key === 'ArrowDown') keyCode = 65364;
+      if (keyCode) {
+        e.preventDefault();
+        client.sendKeyEvent(1, keyCode);
+        client.sendKeyEvent(0, keyCode);
+      }
+    };
+
+    hiddenInput.addEventListener('input', handleTextInput);
+    hiddenInput.addEventListener('keydown', handleInputKeyDown);
+    container.addEventListener('touchstart', focusInput);
+
     // Make container focusable and focus on click
     container.tabIndex = 0;
     container.style.outline = 'none';
     container.focus();
 
-    const focusOnClick = () => container.focus();
+    const focusOnClick = () => {
+      container.focus();
+      focusInput();
+    };
     container.addEventListener('mousedown', focusOnClick);
 
     // Ctrl+V paste: type clipboard text directly
@@ -300,7 +357,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       if (e.key === 'Tab') {
         e.preventDefault();
         e.stopPropagation();
-        if (isConnected) {
+        if (isConnectedRef.current) {
           if (e.shiftKey) {
             // Shift+Tab: Send complete Shift+Tab sequence
             // We handle this fully ourselves to ensure correct order
@@ -353,7 +410,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
         e.preventDefault();
         e.stopPropagation();
         // Send Tab/Shift+Tab to VNC from here since we're capturing at document level
-        if (isConnected) {
+        if (isConnectedRef.current) {
           if (e.shiftKey) {
             console.log('Shift+Tab detected (document capture) - sending full Shift+Tab sequence');
             client.sendKeyEvent(1, 65505); // Shift_L down
@@ -392,7 +449,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
         return true;
       }
       // Only send if connected
-      if (isConnected) {
+      if (isConnectedRef.current) {
         console.log(`KEY DOWN: ${keysym}`);
         client.sendKeyEvent(1, keysym);
       }
@@ -411,7 +468,7 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
         return;
       }
       // Only send if connected
-      if (isConnected) {
+      if (isConnectedRef.current) {
         console.log(`KEY UP: ${keysym}`);
         client.sendKeyEvent(0, keysym);
       }
@@ -427,6 +484,10 @@ export function GuacamoleDisplay({ token, className, connectionId, connectionSta
       container.removeEventListener('mousemove', handleMouse);
       container.removeEventListener('wheel', handleWheel);
       container.removeEventListener('mousedown', focusOnClick);
+      container.removeEventListener('touchstart', focusInput);
+      hiddenInput.removeEventListener('input', handleTextInput);
+      hiddenInput.removeEventListener('keydown', handleInputKeyDown);
+      hiddenInput.remove();
       container.removeEventListener('paste', handlePaste);
       container.removeEventListener('keydown', handleKeyDown);
       container.removeEventListener('keyup', handleKeyUp);
