@@ -49,8 +49,19 @@ const braelinPcDesktop: Desktop = {
   // Uses default wss://guac.braelin.uk/
 }
 
+// Braelin PC noVNC (direct browser VNC)
+const braelinPcNoVnc: Desktop = {
+  id: 102,
+  name: 'Braelin PC (noVNC)',
+  user: 'braelinpc',
+  type: 'novnc',
+  url: 'https://braelinpc-novnc.braelin.uk/vnc.html?autoconnect=true',
+  sshCmd: 'ssh -o ProxyCommand="cloudflared access ssh --hostname %h" braelinpc@braelinpc.braelin.uk',
+  ttydUrl: ''
+}
+
 // No hardcoded desktops - fetch from API
-const initialDesktops: Desktop[] = [macMiniDesktop, braelinPcDesktop]
+const initialDesktops: Desktop[] = [macMiniDesktop, braelinPcDesktop, braelinPcNoVnc]
 
 type ConnectionState = 'connecting' | 'connected' | 'error'
 
