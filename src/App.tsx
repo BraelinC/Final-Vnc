@@ -55,7 +55,7 @@ const braelinPcNoVnc: Desktop = {
   name: 'Braelin PC (noVNC)',
   user: 'braelinpc',
   type: 'novnc',
-  url: 'https://braelinpc-novnc.braelin.uk/vnc.html?autoconnect=true',
+  url: 'https://braelinpc-novnc.braelin.uk/vnc.html?autoconnect=true&password=11142006',
   sshCmd: 'ssh -o ProxyCommand="cloudflared access ssh --hostname %h" braelinpc@braelinpc.braelin.uk',
   ttydUrl: ''
 }
