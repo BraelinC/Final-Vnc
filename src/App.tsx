@@ -280,36 +280,49 @@ function App() {
             {desktops.map((desktop, index) => (
               <div key={desktop.id} className="slide">
                 {(index === currentIndex || preloadAll) ? (
-                  <SplitDesktop
-                    vncDisplay={
-                      <GuacamoleDisplay
-                        token={desktop.vncToken!}
-                        className="guac-display"
-                        connectionId={`vnc-${desktop.id}`}
-                        connectionState={connectionStates[`vnc-${desktop.id}`] || 'connecting'}
-                        onConnectionStateChange={updateConnectionState}
-                        wsUrl={desktop.wsUrl}
+                  desktop.type === 'novnc' && desktop.url ? (
+                    // noVNC: render iframe directly
+                    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                      <iframe
+                        src={desktop.url}
+                        style={{ width: '100%', height: '100%', border: 'none' }}
+                        title={desktop.name}
+                        allow="clipboard-read; clipboard-write"
                       />
-                    }
-                    terminalDisplay={
-                      desktop.sshToken ? (
+                    </div>
+                  ) : (
+                    // Guacamole: use SplitDesktop with GuacamoleDisplay
+                    <SplitDesktop
+                      vncDisplay={
                         <GuacamoleDisplay
-                          token={desktop.sshToken}
+                          token={desktop.vncToken!}
                           className="guac-display"
-                          connectionId={`ssh-${desktop.id}`}
-                          connectionState={connectionStates[`ssh-${desktop.id}`] || 'connecting'}
+                          connectionId={`vnc-${desktop.id}`}
+                          connectionState={connectionStates[`vnc-${desktop.id}`] || 'connecting'}
                           onConnectionStateChange={updateConnectionState}
                           wsUrl={desktop.wsUrl}
                         />
-                      ) : (
-                        <div className="no-terminal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888', background: '#1a1a2e' }}>
-                          <p>No terminal available for {desktop.name}</p>
-                        </div>
-                      )
-                    }
-                    sshCmd={desktop.sshCmd}
-                    ttydUrl={desktop.ttydUrl}
-                  />
+                      }
+                      terminalDisplay={
+                        desktop.sshToken ? (
+                          <GuacamoleDisplay
+                            token={desktop.sshToken}
+                            className="guac-display"
+                            connectionId={`ssh-${desktop.id}`}
+                            connectionState={connectionStates[`ssh-${desktop.id}`] || 'connecting'}
+                            onConnectionStateChange={updateConnectionState}
+                            wsUrl={desktop.wsUrl}
+                          />
+                        ) : (
+                          <div className="no-terminal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888', background: '#1a1a2e' }}>
+                            <p>No terminal available for {desktop.name}</p>
+                          </div>
+                        )
+                      }
+                      sshCmd={desktop.sshCmd}
+                      ttydUrl={desktop.ttydUrl}
+                    />
+                  )
                 ) : (
                   <div className="loading-placeholder">
                     <div className="spinner"></div>
