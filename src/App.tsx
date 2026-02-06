@@ -61,7 +61,8 @@ const braelinPcNoVnc: Desktop = {
 }
 
 // No hardcoded desktops - fetch from API
-const initialDesktops: Desktop[] = [macMiniDesktop, braelinPcDesktop, braelinPcNoVnc]
+// noVNC first so it works from Vercel without needing to swipe
+const initialDesktops: Desktop[] = [braelinPcNoVnc, macMiniDesktop, braelinPcDesktop]
 
 type ConnectionState = 'connecting' | 'connected' | 'error'
 
