@@ -55,7 +55,7 @@ const braelinPcNoVnc: Desktop = {
   name: 'Braelin PC (noVNC)',
   user: 'braelinpc',
   type: 'novnc',
-  url: 'https://braelinpc-novnc.braelin.uk/vnc.html?autoconnect=true&password=11142006',
+  url: 'https://braelinpc-novnc.braelin.uk/vnc_lite.html?autoconnect=true&password=11142006&resize=scale&scale=true',
   sshCmd: 'ssh -o ProxyCommand="cloudflared access ssh --hostname %h" braelinpc@braelinpc.braelin.uk',
   ttydUrl: ''
 }
@@ -281,13 +281,30 @@ function App() {
               <div key={desktop.id} className="slide">
                 {(index === currentIndex || preloadAll) ? (
                   desktop.type === 'novnc' && desktop.url ? (
-                    // noVNC: render iframe directly
-                    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    // noVNC: render iframe directly with mobile-friendly sizing
+                    <div style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}>
                       <iframe
                         src={desktop.url}
-                        style={{ width: '100%', height: '100%', border: 'none' }}
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          border: 'none',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0
+                        }}
                         title={desktop.name}
-                        allow="clipboard-read; clipboard-write"
+                        allow="clipboard-read; clipboard-write; fullscreen"
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
                       />
                     </div>
                   ) : (
