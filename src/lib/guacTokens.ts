@@ -211,7 +211,9 @@ export const guacTokens = {
       settings: {
         hostname: '127.0.0.1',
         port: 5950,
-        password: '11142006'
+        username: 'braelin',
+        password: '11142006',
+        'color-depth': 24
       }
     }
   }),
