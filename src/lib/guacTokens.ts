@@ -14,6 +14,7 @@ interface GuacConnection {
       command?: string;
       scrollback?: number;
       'terminal-type'?: string;
+      'color-depth'?: number;
     };
   };
 }
